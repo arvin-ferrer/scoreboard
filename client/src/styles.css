@@ -1,0 +1,94 @@
+/* Fonts are bundled in client/assets/ui/fonts. Nothing loads from the internet. */
+@font-face { font-family: 'General Sans'; src: url('../assets/ui/fonts/general-sans/GeneralSans-Regular.otf') format('opentype'); font-weight: 400; }
+@font-face { font-family: 'General Sans'; src: url('../assets/ui/fonts/general-sans/GeneralSans-Medium.otf') format('opentype'); font-weight: 500; }
+@font-face { font-family: 'General Sans'; src: url('../assets/ui/fonts/general-sans/GeneralSans-Semibold.otf') format('opentype'); font-weight: 600; }
+@font-face { font-family: 'General Sans'; src: url('../assets/ui/fonts/general-sans/GeneralSans-Bold.otf') format('opentype'); font-weight: 700; }
+@font-face { font-family: 'Balmoral'; src: url('../assets/ui/fonts/balmoral/BalmoralStd-Regular.otf') format('opentype'); }
+
+/* Reprise theme: dark wood and damask, gold trim, cream text. */
+:root {
+  --ink: #14100c;
+  --panel: #1e1710;
+  --panel-2: #2a2016;
+  --line: #5a4524;
+  --gold: #e0bb62;
+  --cream: #f6edda;
+  --muted: #d3c3a3;
+  --good: #7ee59a;
+  --bad: #ff9a90;
+  --display: 'Balmoral', 'General Sans', serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; font-family: 'General Sans', sans-serif; color: var(--cream); background: var(--ink); }
+body { background: linear-gradient(#14100cf2, #14100cf2), url('../assets/ui/optimized/wall_pattern.png') top left / 420px; }
+button { font: inherit; cursor: pointer; }
+.connecting { padding: 2rem; font-size: 1.4rem; }
+h1, h2 { font-family: var(--display); font-weight: 400; }
+
+.splash { min-height: 100%; display: grid; place-content: center; justify-items: center; gap: 1rem; }
+.splash-logo { max-width: 60vw; max-height: 50vh; }
+
+/* Top bar: a strip of the wooden wall with the logo and a gold edge. */
+.topbar { display: flex; align-items: center; gap: 1rem; min-height: 64px; padding: 0.3rem 1rem; border-bottom: 3px solid var(--gold);
+  background: linear-gradient(#0008, #0008), url('../assets/ui/optimized/wooden_wall.png') center / cover; }
+.topbar::before { content: ''; width: 108px; height: 46px; flex: none; background: url('../assets/ui/logo/logo.svg') center / contain no-repeat; }
+.topbar h1 { margin: 0; font-size: 2.4rem; line-height: 1; }
+
+.banner { padding: 0.6rem 1rem; font-weight: 700; }
+.banner.offline { background: #b3261e; color: #fff; }
+.banner.sending { background: #7a5c00; color: #fff; }
+
+/* Scorer screen */
+.scorer { min-height: 100%; display: flex; flex-direction: column; }
+.layout { flex: 1; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 1rem; padding: 1rem; align-items: start; }
+.cards { display: grid; grid-template-columns: repeat(min(var(--cols, 4), 2), minmax(0, 1fr)); gap: 0.6rem; }
+@media (min-width: 1100px) { .cards { grid-template-columns: repeat(min(var(--cols, 4), 3), minmax(0, 1fr)); } }
+@media (min-width: 1500px) { .cards { grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); } }
+.card { background: var(--panel); border: 3px solid var(--line); border-left: 10px solid var(--chamber, #888); border-radius: 8px; overflow: hidden; }
+.card.selected { border-color: var(--gold); border-left-color: var(--chamber, #888); background: var(--panel-2); box-shadow: 0 0 0 2px var(--gold), 0 0 18px #e0bb6288; }
+.card-main { all: unset; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; width: 100%; padding: 0.4rem 0.8rem 0.4rem 0.5rem; min-height: 56px; cursor: pointer; }
+.card-main:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; }
+.card-name { flex: 1; font-size: 1.05rem; font-weight: 600; }
+.card-total { font-size: 2rem; font-weight: 700; }
+.logo { flex: none; width: 44px; height: 44px; border-radius: 50%; object-fit: contain; background: #0006; border: 2px solid var(--chamber, var(--line)); }
+.logo.fallback { display: grid; place-content: center; font-weight: 700; font-size: 1.3rem; background: var(--chamber, #555); color: #14100c; }
+.recent { list-style: none; margin: 0; padding: 0 0.6rem 0.5rem; font-size: 0.85rem; min-height: 1.5rem; }
+.recent li { display: flex; gap: 0.5rem; align-items: center; padding: 2px 0; }
+.recent .why { flex: 1; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent .pending { opacity: 0.7; font-style: italic; }
+.pos { color: var(--good); } .neg { color: var(--bad); }
+.mini { background: none; color: var(--cream); border: 1px solid var(--muted); border-radius: 4px; padding: 2px 8px; }
+.panel { position: sticky; top: 1rem; background: var(--panel); border: 3px solid var(--line); border-radius: 8px; padding: 1rem; }
+.panel-head { display: flex; align-items: center; gap: 0.8rem; min-height: 104px; }
+.panel h2 { margin: 0 0 0.5rem; font-size: 2rem; line-height: 1; }
+.panel-head h2 { margin: 0; }
+/* The chamber's logo sits inside the oval gold frame. */
+.oval { position: relative; flex: none; width: 150px; height: 103px; background: url('../assets/ui/optimized/frame.png') center / 100% 100% no-repeat; }
+.oval .logo { position: absolute; left: 50%; top: 50%; width: 62px; height: 62px; transform: translate(-50%, -50%); border: 0; background: none; }
+.oval .logo.fallback { background: var(--chamber, #555); font-size: 1.6rem; }
+.hint { color: var(--muted); }
+.group h3, .pad h3 { margin: 0.7rem 0 0.3rem; font-size: 0.95rem; color: var(--muted); }
+.counter { margin-left: 0.6rem; font-weight: 700; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+/* Scoring buttons stay plain, large and obvious. Add = solid green edge. Subtract = dashed red edge. */
+.score-btn { min-height: var(--btn-h, 56px); min-width: 80px; flex: 1; font-size: 1.4rem; font-weight: 700; border-radius: 8px; border: 3px solid; background: #120d08; }
+.score-btn.add { border-color: #3fbf66; color: var(--good); }
+.score-btn.sub { border-color: #e5574a; color: var(--bad); border-style: dashed; }
+.score-btn.add.on { background: #2e9e4f; color: #fff; }
+.score-btn.sub.on { background: #d94a3d; color: #fff; }
+.score-btn.key { border-color: var(--muted); color: var(--cream); }
+.score-btn.go.add { background: #2e9e4f; color: #fff; } .score-btn.go.sub { background: #d94a3d; color: #fff; }
+.score-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.score-btn:focus-visible, button.big:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.pad-display { font-size: 2rem; font-weight: 700; text-align: right; padding: 0.2rem 0.5rem; }
+.pad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+.pad-grid .go { grid-column: span 2; }
+.toast { position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%); display: flex; gap: 1.2rem; align-items: center; background: var(--cream); color: #111; padding: 0.6rem 0.8rem 0.6rem 1.2rem; border-radius: 8px; font-weight: 700; box-shadow: 0 4px 16px #000a; }
+.toast button { min-height: 48px; min-width: 96px; font-weight: 700; font-size: 1.1rem; border-radius: 6px; border: 2px solid #111; background: #ffd54f; }
+
+/* Scorer: a small ring and press on the tapped button. Nothing else moves. Off when the admin turns effects off. */
+.score-btn.tapped { animation: tap-ring 500ms ease-out; }
+@keyframes tap-ring { 0% { transform: scale(0.96); box-shadow: 0 0 0 0 #f6edda; } 100% { transform: scale(1); box-shadow: 0 0 0 10px #f6edda00; } }
+.fxmode-reduced .score-btn.tapped { animation: tap-ring-soft 400ms ease-out; }
+@keyframes tap-ring-soft { 0% { box-shadow: 0 0 0 0 #f6edda; } 100% { box-shadow: 0 0 0 6px #f6edda00; } }
+.fxmode-off .score-btn.tapped { animation: none; }

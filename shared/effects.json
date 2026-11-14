@@ -1,0 +1,24 @@
+{
+  "_note": "Projector effects. Every threshold, word and on/off switch is here. Edit, then restart the server (no rebuild needed). 'enabled' turns one effect off. The admin screen has the master on/off and the Full/Reduced switch. Times are in milliseconds.",
+  "effects": {
+    "streakFire":  { "enabled": true, "tiers": [3, 5, 7] },
+    "shake":       { "enabled": true, "atOrBelow": -30, "ms": 700 },
+    "fortissimo":  { "enabled": true, "atOrAbove": 100, "word": "FORTISSIMO!" },
+    "crescendo":   { "enabled": true, "ranksClimbed": 3, "word": "CRESCENDO!" },
+    "encore":      { "enabled": true, "streak": 5, "word": "ENCORE!" },
+    "daCapo":      { "enabled": true, "word": "DA CAPO!" },
+    "newLeader":   { "enabled": true, "ms": 2600 },
+    "scorePop":    { "enabled": true, "ms": 1500, "countUpMs": 700 },
+    "overtake":    { "enabled": true, "ms": 1100 },
+    "goldBurst":   { "enabled": true, "atOrAbove": 100, "particles": 110 },
+    "noteRain":    { "enabled": true, "atOrAbove": 10, "pointsPerNote": 10, "maxNotes": 12 },
+    "offKey":      { "enabled": true, "below": 0 },
+    "finalMinute": { "enabled": true, "underSeconds": 60, "fastUnderSeconds": 10 },
+    "metronome":   { "enabled": true },
+    "curtains":    { "enabled": true, "closeMs": 900, "holdMs": 1500, "openMs": 900 },
+    "podium":      { "enabled": true, "round": "awarding", "stepMs": 1800, "confettiParticles": 260 }
+  },
+  "word": { "ms": 1900 },
+  "queue": { "max": 4, "staleMs": 6000 },
+  "reduced": { "particleScale": 0.3 }
+}

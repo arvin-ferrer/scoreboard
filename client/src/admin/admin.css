@@ -1,0 +1,26 @@
+.pin-gate { min-height: 100%; display: grid; place-content: center; justify-items: center; gap: 1rem; }
+.pin-gate::before { content: ''; width: min(60vw, 420px); height: 150px; background: url('../../assets/ui/logo/logo.svg') center / contain no-repeat; }
+.pin-gate h1 { margin: 0; font-size: 3rem; }
+.pin-gate input { font: inherit; font-size: 2rem; text-align: center; width: 12rem; min-height: 56px; letter-spacing: 0.3em; background: var(--panel); color: var(--cream); border: 3px solid var(--gold); border-radius: 8px; }
+.pin-wrong { color: var(--bad); max-width: 20rem; text-align: center; }
+button.big { min-height: 56px; min-width: 96px; padding: 0 1rem; font-size: 1.2rem; font-weight: 700; border-radius: 8px; border: 3px solid var(--line); background: var(--panel); color: var(--cream); }
+button.big.on { background: var(--cream); color: #14100c; border-color: var(--gold); }
+button.big.go { background: #2e9e4f; border-color: #3fbf66; color: #fff; }
+button.big:disabled { opacity: 0.35; cursor: not-allowed; }
+.admin-top nav { margin-left: auto; display: flex; gap: 1rem; }
+.admin-top a { color: var(--gold); font-weight: 600; }
+.ok { color: var(--good); font-weight: 700; } .bad { color: var(--bad); font-weight: 700; }
+.admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; padding: 1rem; }
+.box { background: var(--panel); border: 2px solid var(--line); border-top: 4px solid var(--gold); border-radius: 8px; padding: 1rem; display: grid; gap: 0.7rem; align-content: start; }
+.box.wide { grid-column: 1 / -1; }
+.box h2 { margin: 0; font-size: 1.9rem; line-height: 1; }
+.box p { margin: 0; }
+.admin-clock { font-size: 4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.admin-clock.paused { opacity: 0.6; }
+.laptops { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
+.laptops li { display: flex; justify-content: space-between; gap: 1rem; }
+.volume { display: grid; gap: 0.4rem; font-size: 1.2rem; font-weight: 600; }
+.volume input { width: 100%; min-height: 48px; accent-color: var(--gold); }
+@media (max-width: 900px) { .admin-grid { grid-template-columns: 1fr; } }
+
+.volume select { font: inherit; min-height: 48px; padding: 0 0.5rem; background: var(--panel); color: var(--cream); border: 3px solid var(--line); border-radius: 8px; }
