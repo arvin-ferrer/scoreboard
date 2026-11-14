@@ -11,3 +11,47 @@
 html, body { margin: 0; height: 100%; font-family: 'General Sans', sans-serif; background: #111; color: #eee; }
 .splash { min-height: 100%; display: grid; place-content: center; justify-items: center; gap: 1rem; }
 .splash-logo { max-width: 60vw; max-height: 50vh; }
+
+/* Scorer screen. Plain on purpose; the theme comes in step 4. */
+* { box-sizing: border-box; }
+button { font: inherit; cursor: pointer; }
+.connecting { padding: 2rem; }
+.scorer { min-height: 100%; display: flex; flex-direction: column; }
+.topbar { padding: 0.5rem 1rem; background: #222; }
+.topbar h1 { margin: 0; font-size: 1.4rem; }
+.banner { padding: 0.6rem 1rem; font-weight: 700; }
+.banner.offline { background: #b3261e; color: #fff; }
+.banner.sending { background: #7a5c00; color: #fff; }
+.layout { flex: 1; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 1rem; padding: 1rem; align-items: start; }
+.cards { display: grid; grid-template-columns: repeat(min(var(--cols, 4), 2), minmax(0, 1fr)); gap: 0.6rem; }
+@media (min-width: 1500px) { .cards { grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); } }
+.card { background: #1d1d1d; border: 3px solid #333; border-left: 10px solid var(--chamber, #888); border-radius: 8px; overflow: hidden; }
+.card.selected { border-color: #fff; background: #2b2b2b; }
+.card-main { all: unset; box-sizing: border-box; display: flex; justify-content: space-between; align-items: baseline; width: 100%; padding: 0.6rem 0.8rem; min-height: 56px; cursor: pointer; }
+.card-name { font-size: 1.05rem; }
+.card-total { font-size: 2rem; font-weight: 700; }
+.recent { list-style: none; margin: 0; padding: 0 0.6rem 0.5rem; font-size: 0.85rem; min-height: 1.5rem; }
+.recent li { display: flex; gap: 0.5rem; align-items: center; padding: 2px 0; }
+.recent .why { flex: 1; opacity: 0.7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent .pending { opacity: 0.6; font-style: italic; }
+.pos { color: #6fdc8c; } .neg { color: #ff8a80; }
+.mini { background: none; color: #ccc; border: 1px solid #666; border-radius: 4px; padding: 2px 8px; }
+.panel { position: sticky; top: 1rem; background: #1a1a1a; border-radius: 8px; padding: 1rem; }
+.panel h2 { margin: 0 0 0.5rem; font-size: 1.3rem; }
+.hint { opacity: 0.7; }
+.group h3, .pad h3 { margin: 0.7rem 0 0.3rem; font-size: 0.95rem; opacity: 0.85; }
+.counter { margin-left: 0.6rem; font-weight: 700; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.score-btn { min-height: var(--btn-h, 56px); min-width: 80px; flex: 1; font-size: 1.4rem; font-weight: 700; border-radius: 8px; border: 3px solid; background: #222; }
+.score-btn.add { border-color: #2e9e4f; color: #6fdc8c; }
+.score-btn.sub { border-color: #d94a3d; color: #ff8a80; border-style: dashed; }
+.score-btn.add.on { background: #2e9e4f; color: #fff; }
+.score-btn.sub.on { background: #d94a3d; color: #fff; }
+.score-btn.key { border-color: #666; color: #eee; }
+.score-btn.go.add { background: #2e9e4f; color: #fff; } .score-btn.go.sub { background: #d94a3d; color: #fff; }
+.score-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.pad-display { font-size: 2rem; font-weight: 700; text-align: right; padding: 0.2rem 0.5rem; }
+.pad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+.pad-grid .go { grid-column: span 2; }
+.toast { position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%); display: flex; gap: 1.2rem; align-items: center; background: #fff; color: #111; padding: 0.6rem 0.8rem 0.6rem 1.2rem; border-radius: 8px; font-weight: 700; box-shadow: 0 4px 16px #000a; }
+.toast button { min-height: 48px; min-width: 96px; font-weight: 700; font-size: 1.1rem; border-radius: 6px; border: 2px solid #111; background: #ffd54f; }

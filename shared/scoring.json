@@ -1,102 +1,30 @@
 {
-  "_note": "Every scoring number and rule switch lives here. Never hard-code these in code. Switches with tentative:true are not confirmed by the committee yet.",
-  "general": {
-    "maxChambers": 15,
-    "trebleCap": 2,
-    "allowNegativeTotal": true,
-    "requireHostConfirmationBetweenSteps": true,
-    "draftTieBreak": "rock-paper-scissors"
-  },
-  "adagio": {
-    "durationMin": 15,
-    "pools": 2,
-    "questionCounts": { "easy": 25, "medium": 20, "hard": 15 },
-    "correct": { "easy": 10, "medium": 20, "hard": 30 },
-    "wrong": 0,
-    "discard": 0,
-    "starterDifficulty": "easy",
-    "swapWhenAtTrebleCap": true,
-    "unkeptQuestionGoesTo": "pool"
-  },
-  "andante": {
-    "strategyDurationMin": 3,
-    "durationMin": 15,
-    "durationExcludesStrategy": true,
-    "sequences": 4,
-    "attackPhaseSec": 30,
-    "defensePhaseSec": 180,
-    "attacker": { "gain": 0, "loss": 0 },
-    "defenseCorrect": { "easy": 10, "medium": 20, "hard": 30 },
-    "defenseWrongOrTimeout": { "easy": -10, "medium": -20, "hard": -30 },
-    "defenderKeepsTreble": true,
-    "poolWhileDefending": true,
-    "poolCorrect": { "easy": 5, "medium": 15, "hard": 20 },
-    "poolWrong": 0,
-    "defenderAtTrebleCap": {
-      "tentative": true,
-      "options": ["returnToPool", "swap"],
-      "value": "returnToPool"
+  "_note": "Quick-button point values per round. Edit here, no code change needed. Round order is the order below. A round with tiebreak:true has no scoring; the admin picks winners of tied podium places.",
+  "rounds": {
+    "adagio": {
+      "name": "Adagio",
+      "groups": [{ "label": "Correct", "values": [10, 20, 30] }]
     },
-    "poolAnswerAtTrebleCap": {
-      "tentative": true,
-      "options": ["returnToPool", "swap"],
-      "value": "returnToPool",
-      "keepDecibels": true
-    }
-  },
-  "allegro": {
-    "durationMin": 40,
-    "itemCounts": { "easy": 3, "medium": 5, "hard": 7 },
-    "baseValue": { "easy": 15, "medium": 30, "hard": 60 },
-    "syntaxErrorPenalty": 5,
-    "syntaxErrorFloor": 0,
-    "incorrectPenaltyIsBase": true,
-    "unanswered": 0,
-    "powerUpsPerChamber": 1,
-    "draftOrder": "lowestFirst",
-    "powerUps": {
-      "pianissimo": { "copies": 5, "bonus": 10 },
-      "ritardando": { "copies": 4, "bonus": 40, "wrongExtraPenalty": 0 },
-      "fortissimo": {
-        "copies": 3,
-        "maxWager": 100,
-        "capAtCurrentTotal": true,
-        "requiresTotalAbove": 0,
-        "wrongLosesWager": true
-      },
-      "hemiola": { "copies": 2, "hardBonus": 15, "discardsEasyPerCorrectHard": 1, "endsOnIncorrect": true },
-      "crescendo": { "copies": 1, "bonusPerDiscardPerCorrectHard": 5, "discards": ["easy", "medium"] }
+    "andante": {
+      "name": "Andante",
+      "groups": [
+        { "label": "Defense won", "values": [10, 20, 30] },
+        { "label": "Defense lost", "values": [-10, -20, -30] },
+        { "label": "Pool", "values": [5, 15, 20] }
+      ]
     },
-    "magnumOpus": {
-      "startMin": 20,
-      "windowMin": 10,
-      "bonus": 100,
-      "tieFlagWithinMs": 3000,
-      "tieBreak": "bato-bato-pick"
+    "allegro": {
+      "name": "Allegro",
+      "groups": [
+        { "label": "Correct", "values": [15, 30, 60] },
+        { "label": "Incorrect", "values": [-15, -30, -60] },
+        { "label": "Syntax error", "values": [-5], "counter": true },
+        { "label": "Power-up bonus", "values": [10, 15, 40] },
+        { "label": "Magnum Opus", "values": [100] },
+        { "label": "Special problem", "values": [100, -50] }
+      ]
     },
-    "envelope": {
-      "startMin": 35,
-      "correct": 100,
-      "wrongOrLate": -50,
-      "unopened": 0
-    }
-  },
-  "vivace": {
-    "durationMin": 5,
-    "maxQuestions": 3,
-    "onlyTiesAffecting": [1, 2, 3],
-    "changesDecibels": false
-  },
-  "audit": {
-    "voidNeedsPinAfterMs": 120000,
-    "voidNeedsPinInMovements": ["allegro", "andante"],
-    "undoToastSec": 3
-  },
-  "projector": {
-    "music": {
-      "crossfadeMs": 2000,
-      "leaderHoldMs": 10000,
-      "keepCurrentOnTie": true
-    }
+    "vivace": { "name": "Vivace", "tiebreak": true, "groups": [] },
+    "awarding": { "name": "Awarding", "groups": [] }
   }
 }

@@ -1,10 +1,7 @@
-import logo from '../assets/ui/logo/logo.svg';
+import ScorerScreen from './scorer/ScorerScreen.jsx';
+import SyncTest from './SyncTest.jsx';
 
+// Scorer screen at "/". The bare sync test page (round switcher, timer) stays at "/sync-test".
 export default function App() {
-  return (
-    <main className="splash">
-      <img src={logo} alt="Get One Fourth: Reprise" className="splash-logo" />
-      <p>Scoreboard skeleton</p>
-    </main>
-  );
+  return window.location.pathname.startsWith('/sync-test') ? <SyncTest /> : <ScorerScreen />;
 }

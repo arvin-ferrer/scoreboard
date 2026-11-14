@@ -5,6 +5,8 @@
 
 Rules marked **(tentative)** are working answers that the committee still has to confirm. Everything else is final.
 
+**Note for the scoreboard software:** these rules are applied by human proctors, face to face. The software does not enforce or track any of them. It only records points added or subtracted. Section 10 lists the point values the scorer screens need.
+
 ---
 
 ## 1. Participants and registration
@@ -233,3 +235,24 @@ Once all scores are in, the three chambers with the highest decibels (after any 
 | Total decibels go below 0 | Allowed. |
 | Chamber with 0 or fewer dB wants Fortissimo | Not allowed. It picks another power-up. |
 | Draft pick tie | Rock-paper-scissors. |
+
+---
+
+## 10. Point values for the scorer screens
+
+The scoreboard shows these as quick buttons for each round. Anything else is entered with the custom + / − pad.
+
+| Round | Event | Points |
+| --- | --- | --- |
+| Adagio | Correct answer: Easy / Medium / Hard | +10 / +20 / +30 |
+| Andante | Defense won: Easy / Medium / Hard | +10 / +20 / +30 |
+| Andante | Defense lost or timed out: Easy / Medium / Hard | −10 / −20 / −30 |
+| Andante | Pool question correct: Easy / Medium / Hard | +5 / +15 / +20 |
+| Allegro | Correct: Easy / Medium / Hard | +15 / +30 / +60 |
+| Allegro | Incorrect: Easy / Medium / Hard | −15 / −30 / −60 |
+| Allegro | Each syntax error on a correct answer | −5 |
+| Allegro | Pianissimo / Hemiola / Ritardando bonus | +10 / +15 / +40 |
+| Allegro | Fortissimo wager, Crescendo bonus | Custom amount |
+| Allegro | Magnum Opus, first correct | +100 |
+| Allegro | Special problem: correct / not correct | +100 / −50 |
+| Vivace | Tiebreak | No points. The admin sets the order of the tied chambers. |
