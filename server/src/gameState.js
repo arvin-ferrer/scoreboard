@@ -6,6 +6,7 @@ export function createGameState(log, roundIds, clock = Date.now) {
     round: roundIds.includes(saved?.round) ? saved.round : roundIds[0],
     timer: saved?.timer ?? { duration: 0, startedAt: null, pausedAt: null },
     tieOrder: Array.isArray(saved?.tieOrder) ? saved.tieOrder : [],
+    scoresHidden: saved?.scoresHidden === true,
   };
   const save = () => log.setState('game', state);
 
@@ -46,6 +47,15 @@ export function createGameState(log, roundIds, clock = Date.now) {
     // A proctor picked the winner of the next open place in a tie.
     pickTieWinner(chamberId) {
       if (!state.tieOrder.includes(chamberId)) state.tieOrder.push(chamberId);
+      save();
+    },
+    // Takes back the most recent tie pick (a mis-tap).
+    undoTiePick() {
+      state.tieOrder.pop();
+      save();
+    },
+    setHidden(hidden) {
+      state.scoresHidden = hidden === true;
       save();
     },
     clearTieOrder() {

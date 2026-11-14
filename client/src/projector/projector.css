@@ -1,0 +1,23 @@
+@font-face { font-family: 'Balmoral'; src: url('../../assets/ui/fonts/balmoral/BalmoralStd-Regular.otf') format('opentype'); }
+/* Sized in vh/vw so it scales to any screen and reads from across a room. */
+.projector { height: 100vh; overflow: hidden; padding: 2vh 3vw; color: #fff;
+  background: linear-gradient(#000c, #000c), url('../../assets/ui/structure/wall_pattern.png') center / 60vh; }
+.proj-head { height: 22vh; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2vw; }
+.proj-logo { max-height: 18vh; max-width: 100%; }
+.proj-round { font-family: 'Balmoral', 'General Sans', serif; font-size: 12vh; text-align: center; }
+.proj-timer { justify-self: end; font-size: 18vh; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 1.5vw; }
+.proj-timer small { font-size: 4vh; font-weight: 400; opacity: 0.8; }
+.proj-timer.stopped, .proj-timer.paused { opacity: 0.6; }
+.proj-timer.urgent { color: #ff5a4d; opacity: 1; }
+.proj-timer.done { animation: proj-blink 1s steps(2, start) infinite; }
+@keyframes proj-blink { to { visibility: hidden; } }
+.proj-board { --row-h: calc(70vh / var(--n)); position: relative; height: calc(var(--n) * var(--row-h)); margin: 0; padding: 0; list-style: none; }
+.proj-row { position: absolute; left: 0; right: 0; height: calc(var(--row-h) - 1.2vh); display: flex; align-items: center; gap: 2.5vw;
+  padding: 0 2.5vw; background: #000b; border-left: 1.6vh solid var(--chamber); border-radius: 1vh;
+  transform: translateY(calc(var(--i) * var(--row-h))); transition: transform 900ms cubic-bezier(0.3, 0.9, 0.3, 1); }
+.proj-rank { width: 6vw; font-size: 6vh; font-weight: 700; opacity: 0.8; }
+.proj-name { flex: 1; font-size: 5vh; font-weight: 600; }
+.proj-name small { margin-left: 1.5vw; font-size: 2.4vh; font-weight: 400; opacity: 0.7; }
+.proj-total { font-size: 6.4vh; font-weight: 700; font-variant-numeric: tabular-nums; }
+.proj-total.masked { opacity: 0.5; }
+@media (prefers-reduced-motion: reduce) { .proj-row { transition: none; } }

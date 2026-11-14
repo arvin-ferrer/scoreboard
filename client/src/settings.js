@@ -1,5 +1,6 @@
 // Defaults for shared/settings.json. The server sends the file; anything missing falls back here.
 export const DEFAULT_SETTINGS = {
+  timerPresetsMinutes: [1, 5, 10, 15, 20, 30],
   recentEntries: 3,
   undoToastSeconds: 6,
   cardColumns: 4,

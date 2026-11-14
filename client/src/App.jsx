@@ -1,7 +1,13 @@
 import ScorerScreen from './scorer/ScorerScreen.jsx';
-import SyncTest from './SyncTest.jsx';
+import AdminScreen from './admin/AdminScreen.jsx';
+import ProjectorScreen from './projector/ProjectorScreen.jsx';
+import HistoryScreen from './history/HistoryScreen.jsx';
 
-// Scorer screen at "/". The bare sync test page (round switcher, timer) stays at "/sync-test".
+// One screen per path. "/" is the scorer screen.
 export default function App() {
-  return window.location.pathname.startsWith('/sync-test') ? <SyncTest /> : <ScorerScreen />;
+  const path = window.location.pathname;
+  if (path.startsWith('/admin')) return <AdminScreen />;
+  if (path.startsWith('/projector')) return <ProjectorScreen />;
+  if (path.startsWith('/history')) return <HistoryScreen />;
+  return <ScorerScreen />;
 }

@@ -1,5 +1,7 @@
 {
-  "_note": "Scorer screen settings. Edit here, then restart the server. Missing keys fall back to the defaults in client/src/settings.js.",
+  "_note": "Scorer and admin settings. Change adminPin before the event (the server never sends it to browsers). Edit here, then restart the server. Missing keys fall back to the defaults in client/src/settings.js.",
+  "adminPin": "1234",
+  "timerPresetsMinutes": [1, 5, 10, 15, 20, 30],
   "recentEntries": 3,
   "undoToastSeconds": 6,
   "cardColumns": 4,
