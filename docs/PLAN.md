@@ -85,6 +85,18 @@ Every scoring screen also has a custom + / − number pad for anything else, suc
 
 The scoreboard is themed, not plain. It uses the art in `client/assets/`: backgrounds, frames, logos and fonts in `ui/`, and a logo and song for each chamber in `chambers/<chamber-id>/`. The theme follows the Reprise music motif. All assets are bundled so they load with no internet.
 
+### Projector effects
+
+Visual effects on the projector, for show only. They never decide or track anything about the game. Every threshold, word and on/off switch is in `shared/effects.json` (restart the server after editing).
+
+- Triggers: live score entries, rank changes, the timer and round changes. A snapshot (start or reconnect) never plays effects. Undo plays no pop, word or spotlight.
+- Streak fire (3, 5, 7 positives in a row), shake and red flash (−30 or worse), word flashes (FORTISSIMO! at +100, CRESCENDO! on a 3-rank climb, ENCORE! at a streak of 5, DA CAPO! when a total climbs from below 0 to above 0), new-leader spotlight, score pop with count-up, overtake trail, gold burst (+100), note rain, off-key grey (total below 0), final-minute pulse with a metronome, round-change curtains, and the Awarding podium (3rd, 2nd, 1st on the admin's click, confetti for 1st).
+- Word flash, curtains and spotlight go through one queue, one at a time. Row effects run together.
+- While scores are hidden, no effect that shows scores or ranks plays, and the podium cannot be revealed.
+- Admin: effects on/off, Full or Reduced, the podium reveal buttons, and an effects preview panel with one button per effect. Previews go only to projector screens and change nothing stored.
+- Scorer screens get only a short ring on the tapped button.
+- CSS animations and one canvas only. Flames, spotlight and confetti are drawn in code until art is added.
+
 ### Simple scoring
 
 - A scorer never types unless using the custom pad.

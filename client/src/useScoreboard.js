@@ -8,7 +8,14 @@ const store = () => { try { return window.localStorage; } catch { return { getIt
 
 // Connects to the host, mirrors its score log, and sends the scorer's entries reliably.
 // role: scorer | admin | projector | history. pin: set by the admin screen to log in as admin.
-export function useScoreboard({ role = 'scorer', pin = null } = {}) {
+// onLive(kind, payload, extra): the projector's hook into what is happening right now. It hears
+//   'snapshot' (full log: start or reconnect, so replays must not fire effects), 'entry' (one new live entry),
+//   'state' (payload = new state, extra = previous state) and 'preview' (admin test button).
+export function useScoreboard({ role = 'scorer', pin = null, onLive = null } = {}) {
+  const live_ = useRef(onLive);
+  live_.current = onLive;
+  const seen = useRef(new Set()); // entry ids already known, so a repeat is not "live"
+  const lastState = useRef(null);
   const sock = useRef(null);
   const device = useRef(deviceId(store()));
   const [data, setData] = useState(null);
@@ -32,9 +39,25 @@ export function useScoreboard({ role = 'scorer', pin = null } = {}) {
     s.on('connect', () => setOnline(true));
     s.on('disconnect', () => { setOnline(false); flushing.current = false; });
     // The host sends the full log on every (re)connect, so this is also the catch-up.
-    s.on('snapshot', (snap) => { hostOffset.current = snap.state.hostNow - Date.now(); setData(snap); });
-    s.on('entry', (e) => setData((d) => d && (d.entries.some((x) => x.id === e.id) ? d : { ...d, entries: [...d.entries, e] })));
-    s.on('state', (u) => { hostOffset.current = u.state.hostNow - Date.now(); setData((d) => d && { ...d, ...u }); });
+    s.on('snapshot', (snap) => {
+      hostOffset.current = snap.state.hostNow - Date.now();
+      seen.current = new Set(snap.entries.map((x) => x.id));
+      lastState.current = snap.state;
+      live_.current?.('snapshot', snap);
+      setData(snap);
+    });
+    s.on('entry', (e) => {
+      if (!seen.current.has(e.id)) { seen.current.add(e.id); live_.current?.('entry', e); }
+      setData((d) => d && (d.entries.some((x) => x.id === e.id) ? d : { ...d, entries: [...d.entries, e] }));
+    });
+    s.on('state', (u) => {
+      hostOffset.current = u.state.hostNow - Date.now();
+      const prev = lastState.current;
+      lastState.current = u.state;
+      if (prev) live_.current?.('state', u.state, prev);
+      setData((d) => d && { ...d, ...u });
+    });
+    s.on('effects:preview', (m) => live_.current?.('preview', m));
     s.on('laptops', setLaptops);
     return () => { clearTimeout(retry.current); s.close(); };
   }, []);

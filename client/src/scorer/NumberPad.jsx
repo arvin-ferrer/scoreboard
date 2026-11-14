@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { fmtPoints } from '../settings.js';
 
 export default function NumberPad({ disabled, max, label, onScore }) {
@@ -7,7 +7,18 @@ export default function NumberPad({ disabled, max, label, onScore }) {
   const value = Math.min(Number(digits || 0), max) * sign;
   const press = (d) => setDigits((cur) => (Number(cur + d) > max ? cur : String(Number(cur + d))));
 
-  const submit = () => { if (value !== 0) { onScore(value, label); setDigits(''); } };
+  const [tapped, setTapped] = useState(false);
+  const timer = useRef(null);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const submit = () => {
+    if (value === 0) return;
+    onScore(value, label);
+    setDigits('');
+    setTapped(false);
+    clearTimeout(timer.current);
+    requestAnimationFrame(() => setTapped(true));
+    timer.current = setTimeout(() => setTapped(false), 500);
+  };
   return (
     <div className="pad">
       <h3>{label}</h3>
@@ -20,7 +31,7 @@ export default function NumberPad({ disabled, max, label, onScore }) {
           <button key={n} className="score-btn key" onClick={() => press(n)}>{n}</button>
         ))}
         <button className="score-btn key" onClick={() => press(0)}>0</button>
-        <button className={`score-btn go ${sign < 0 ? 'sub' : 'add'}`} disabled={disabled || value === 0} onClick={submit}>
+        <button className={`score-btn go ${sign < 0 ? 'sub' : 'add'}${tapped ? ' tapped' : ''}`} disabled={disabled || value === 0} onClick={submit}>
           Add {value !== 0 ? fmtPoints(value) : ''}
         </button>
       </div>

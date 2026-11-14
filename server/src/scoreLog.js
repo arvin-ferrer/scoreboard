@@ -87,6 +87,11 @@ export function openScoreLog(dbPath = ':memory:', clock = Date.now) {
         .run(key, JSON.stringify(value));
     },
 
+    // Online copy of the whole database (entries and game state) to `file`. Safe while scoring continues.
+    backupTo(file) {
+      return db.backup(file);
+    },
+
     close() {
       db.close();
     },

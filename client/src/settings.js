@@ -8,6 +8,8 @@ export const DEFAULT_SETTINGS = {
   customPadMaxPoints: 1000,
   customLabel: 'Custom',
   ackTimeoutMs: 4000,
+  musicHoldSeconds: 10,
+  musicCrossfadeSeconds: 2,
   texts: {
     offline: 'Offline. Your entries are saved and will send when the connection returns.',
     sending: 'Sending…',

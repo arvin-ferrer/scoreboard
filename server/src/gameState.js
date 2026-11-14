@@ -7,6 +7,11 @@ export function createGameState(log, roundIds, clock = Date.now) {
     timer: saved?.timer ?? { duration: 0, startedAt: null, pausedAt: null },
     tieOrder: Array.isArray(saved?.tieOrder) ? saved.tieOrder : [],
     scoresHidden: saved?.scoresHidden === true,
+    musicVolume: Number.isFinite(saved?.musicVolume) ? Math.min(1, Math.max(0, saved.musicVolume)) : 0.7,
+    musicMuted: saved?.musicMuted === true,
+    effectsOn: saved?.effectsOn !== false,
+    effectsIntensity: saved?.effectsIntensity === 'reduced' ? 'reduced' : 'full',
+    podiumRevealed: Number.isInteger(saved?.podiumRevealed) ? Math.min(3, Math.max(0, saved.podiumRevealed)) : 0,
   };
   const save = () => log.setState('game', state);
 
@@ -57,6 +62,27 @@ export function createGameState(log, roundIds, clock = Date.now) {
     setHidden(hidden) {
       state.scoresHidden = hidden === true;
       save();
+    },
+    // Only the fields given are changed. Volume is kept between 0 and 1.
+    setMusic(msg) {
+      const { volume, muted } = msg && typeof msg === 'object' ? msg : {};
+      if (typeof volume === 'number' && Number.isFinite(volume)) state.musicVolume = Math.min(1, Math.max(0, volume));
+      if (typeof muted === 'boolean') state.musicMuted = muted;
+      save();
+    },
+    // Projector effects: master switch and Full/Reduced. Only the fields given are changed.
+    setEffects(msg) {
+      const { on, intensity } = msg && typeof msg === 'object' ? msg : {};
+      if (typeof on === 'boolean') state.effectsOn = on;
+      if (intensity === 'full' || intensity === 'reduced') state.effectsIntensity = intensity;
+      save();
+    },
+    // How many podium places the projector has revealed (0 to 3: 3rd, then 2nd, then 1st).
+    setPodium(n) {
+      if (!Number.isInteger(n) || n < 0 || n > 3) return false;
+      state.podiumRevealed = n;
+      save();
+      return true;
     },
     clearTieOrder() {
       state.tieOrder = [];

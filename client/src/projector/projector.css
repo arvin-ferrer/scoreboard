@@ -1,23 +1,40 @@
-@font-face { font-family: 'Balmoral'; src: url('../../assets/ui/fonts/balmoral/BalmoralStd-Regular.otf') format('opentype'); }
 /* Sized in vh/vw so it scales to any screen and reads from across a room. */
-.projector { height: 100vh; overflow: hidden; padding: 2vh 3vw; color: #fff;
-  background: linear-gradient(#000c, #000c), url('../../assets/ui/structure/wall_pattern.png') center / 60vh; }
-.proj-head { height: 22vh; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2vw; }
-.proj-logo { max-height: 18vh; max-width: 100%; }
-.proj-round { font-family: 'Balmoral', 'General Sans', serif; font-size: 12vh; text-align: center; }
-.proj-timer { justify-self: end; font-size: 18vh; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 1.5vw; }
-.proj-timer small { font-size: 4vh; font-weight: 400; opacity: 0.8; }
-.proj-timer.stopped, .proj-timer.paused { opacity: 0.6; }
-.proj-timer.urgent { color: #ff5a4d; opacity: 1; }
+.projector { position: relative; height: 100vh; overflow: hidden; padding: 2vh 3vw; color: #fff;
+  background: linear-gradient(#0c0805d9, #0c0805d9), url('../../assets/ui/optimized/wall_pattern.png') center / 55vh; }
+/* Curtains hang at both edges, behind the frame. */
+.projector::before, .projector::after { content: ''; position: absolute; top: 0; width: 16vw; height: 100vh; z-index: 0; pointer-events: none;
+  background: url('../../assets/ui/optimized/blue_curtain_1.png') top left / auto 100% no-repeat; }
+.projector::after { right: 0; transform: scaleX(-1); }
+.projector::before { left: 0; }
+.projector > * { position: relative; z-index: 1; }
+
+.proj-head { height: 20vh; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2vw; padding: 0 1vw; }
+.proj-logo { max-height: 16vh; max-width: 100%; justify-self: start; }
+.proj-round { font-family: var(--display); font-size: 12vh; line-height: 1; text-align: center; text-shadow: 0 0.4vh 1.2vh #000; }
+.proj-timer { justify-self: end; font-size: 16vh; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 1.5vw; text-shadow: 0 0.4vh 1.2vh #000; }
+.proj-timer small { font-size: 4vh; font-weight: 400; opacity: 0.85; }
+.proj-timer.stopped, .proj-timer.paused { opacity: 0.7; }
+.proj-timer.urgent { color: #ff6a5c; opacity: 1; }
 .proj-timer.done { animation: proj-blink 1s steps(2, start) infinite; }
 @keyframes proj-blink { to { visibility: hidden; } }
-.proj-board { --row-h: calc(70vh / var(--n)); position: relative; height: calc(var(--n) * var(--row-h)); margin: 0; padding: 0; list-style: none; }
-.proj-row { position: absolute; left: 0; right: 0; height: calc(var(--row-h) - 1.2vh); display: flex; align-items: center; gap: 2.5vw;
-  padding: 0 2.5vw; background: #000b; border-left: 1.6vh solid var(--chamber); border-radius: 1vh;
-  transform: translateY(calc(var(--i) * var(--row-h))); transition: transform 900ms cubic-bezier(0.3, 0.9, 0.3, 1); }
-.proj-rank { width: 6vw; font-size: 6vh; font-weight: 700; opacity: 0.8; }
-.proj-name { flex: 1; font-size: 5vh; font-weight: 600; }
-.proj-name small { margin-left: 1.5vw; font-size: 2.4vh; font-weight: 400; opacity: 0.7; }
-.proj-total { font-size: 6.4vh; font-weight: 700; font-variant-numeric: tabular-nums; }
-.proj-total.masked { opacity: 0.5; }
+
+/* The gold frame holds the leaderboard. The frame art is 109 px thick at 2000 px wide. */
+.proj-frame { height: 76vh; padding: 1.2vh 1.6vw; background-color: #100b07f0; background-clip: padding-box;
+  border: solid transparent; border-width: 3.6vh 3.6vh; border-image: url('../../assets/ui/optimized/square_frame.png') 109 / 3.6vh stretch; }
+.proj-board { --gap: 1.4vw; --row-h: min(calc(66vh / var(--rows)), 11vh); position: relative; height: calc(var(--rows) * var(--row-h)); margin: 0; padding: 0; list-style: none; }
+.proj-row { position: absolute; left: 0; top: 0; width: calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols)); height: calc(var(--row-h) - 0.8vh);
+  display: flex; align-items: center; gap: 1.2vw; padding: 0 1.4vw 0 0.6vw; background: #000c; border-left: 1.2vh solid var(--chamber); border-radius: 1vh;
+  transform: translate(calc(var(--col) * (100% + var(--gap))), calc(var(--row) * var(--row-h)));
+  transition: transform 900ms cubic-bezier(0.3, 0.9, 0.3, 1); }
+.proj-rank { width: 3.4vw; font-size: calc(var(--row-h) * 0.5); font-weight: 700; color: #e0bb62; text-align: center; }
+.proj-row .logo { width: calc(var(--row-h) * 0.7); height: calc(var(--row-h) * 0.7); border-width: 0.3vh; }
+.proj-row .logo.fallback { font-size: calc(var(--row-h) * 0.4); }
+.proj-name { flex: 1; min-width: 0; font-size: calc(var(--row-h) * 0.44); font-weight: 600; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proj-name small { margin-left: 1vw; font-size: calc(var(--row-h) * 0.26); font-weight: 400; color: #d3c3a3; }
+.proj-total { font-size: calc(var(--row-h) * 0.58); font-weight: 700; font-variant-numeric: tabular-nums; }
+.proj-total.masked { opacity: 0.6; }
+
+/* Small, in the corner, and gone once clicked. */
+.enable-sound { position: absolute; z-index: 5; right: 1.5vw; bottom: 1vh; min-height: 48px; padding: 0 1.2rem; font-size: 1.2rem; font-weight: 700;
+  border-radius: 8px; border: 3px solid #e0bb62; background: #14100c; color: #f6edda; }
 @media (prefers-reduced-motion: reduce) { .proj-row { transition: none; } }

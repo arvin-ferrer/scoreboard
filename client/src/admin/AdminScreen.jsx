@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useScoreboard } from '../useScoreboard.js';
 import { useNow } from '../useNow.js';
 import { formatClock, timerLeftMs, timerStatus } from '../../../shared/timer.js';
 import HistoryTable from '../history/HistoryTable.jsx';
+import { PREVIEW_EFFECTS } from '../../../shared/effects.js';
 import './admin.css';
 
 const PIN_KEY = 'gof-admin-pin';
@@ -45,6 +46,9 @@ function Controls({ sb }) {
   const t = state.timer;
   const status = timerStatus(t);
   const nameList = (ids) => ids.map(name).join(', ');
+  const missing = chambers
+    .map((c) => ({ id: c.id, name: c.name, what: [c.logoUrl ? null : 'logo', c.songUrl ? null : 'song'].filter(Boolean) }))
+    .filter((m) => m.what.length > 0);
 
   return (
     <div className="admin">
@@ -89,6 +93,21 @@ function Controls({ sb }) {
         </section>
 
         <section className="box">
+          <h2>Music on the projector</h2>
+          <MusicControls state={state} send={send} />
+        </section>
+
+        <section className="box">
+          <h2>Effects on the projector</h2>
+          <EffectsControls state={state} send={send} />
+        </section>
+
+        <section className="box">
+          <h2>Podium reveal</h2>
+          <PodiumControls state={state} ties={data.ties.length > 0} round={data.scoring.rounds[state.round]?.name} send={send} />
+        </section>
+
+        <section className="box">
           <h2>Tied chambers</h2>
           {data.ties.length === 0 && <p className="hint">No tie for a podium place.</p>}
           {data.ties.map((tie) => (
@@ -126,11 +145,105 @@ function Controls({ sb }) {
           </ul>
         </section>
 
+        {missing.length > 0 && (
+          <section className="box wide">
+            <h2>Missing chamber files</h2>
+            <p className="hint">These chambers use a plain number badge or no song until the file is added to client/assets/chambers/&lt;id&gt;/. Reload the projector after adding files.</p>
+            <ul className="laptops">
+              {missing.map((m) => <li key={m.id}><span>{m.name} ({m.id})</span><span className="bad">{m.what.join(' and ')}</span></li>)}
+            </ul>
+          </section>
+        )}
+
+        <section className="box wide">
+          <h2>Effects preview</h2>
+          <EffectsPreview chambers={chambers} hidden={state.scoresHidden} send={send} />
+        </section>
+
         <section className="box wide">
           <h2>All entries</h2>
           <HistoryTable data={data} entries={entries} onUndo={undo} />
         </section>
       </main>
     </div>
+  );
+}
+
+// Volume and mute for the projector's music. The projector laptop does the playing.
+function MusicControls({ state, send }) {
+  const [volume, setVolume] = useState(state.musicVolume);
+  const wait = useRef(null);
+  useEffect(() => () => clearTimeout(wait.current), []);
+  const change = (v) => {
+    setVolume(v);
+    clearTimeout(wait.current);
+    wait.current = setTimeout(() => send('music:set', { volume: v }), 150); // not on every pixel of the drag
+  };
+  return (
+    <>
+      <label className="volume">
+        <span>Volume {Math.round(volume * 100)}%</span>
+        <input type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => change(Number(e.target.value))} />
+      </label>
+      <button className={`big ${state.musicMuted ? 'on' : ''}`} aria-pressed={state.musicMuted} onClick={() => send('music:set', { muted: !state.musicMuted })}>
+        {state.musicMuted ? 'Muted. Tap to unmute' : 'Mute'}
+      </button>
+      <p className="hint">On the projector laptop, click "Enable sound" once. Music stops while scores are hidden.</p>
+    </>
+  );
+}
+
+// Master switch and Full/Reduced for the projector's visual effects.
+function EffectsControls({ state, send }) {
+  return (
+    <>
+      <p className={state.effectsOn ? 'ok' : 'bad'}>{state.effectsOn ? 'Effects on' : 'Effects off'}</p>
+      <button className="big" onClick={() => send('effects:set', { on: !state.effectsOn })}>{state.effectsOn ? 'Turn effects off' : 'Turn effects on'}</button>
+      <div className="btn-row" role="group" aria-label="Intensity">
+        {[['full', 'Full'], ['reduced', 'Reduced']].map(([id, label]) => (
+          <button key={id} className={`big ${state.effectsIntensity === id ? 'on' : ''}`} aria-pressed={state.effectsIntensity === id} onClick={() => send('effects:set', { intensity: id })}>{label}</button>
+        ))}
+      </div>
+      <p className="hint">Reduced: no shaking, red flash or sweeping words, and far less confetti. Thresholds and words are in shared/effects.json (restart the server after editing).</p>
+    </>
+  );
+}
+
+// Awarding: reveal 3rd, then 2nd, then 1st, one click each.
+function PodiumControls({ state, ties, round, send }) {
+  const n = state.podiumRevealed;
+  const names = ['3rd place', '2nd place', '1st place'];
+  const blocked = state.scoresHidden ? 'Reveal scores first.' : ties ? 'Settle the tied podium places first.' : null;
+  return (
+    <>
+      <p className="hint">{state.round === 'awarding' ? 'The projector shows the podium.' : `The projector shows the podium in the Awarding round (now: ${round}).`}</p>
+      <p>{n === 0 ? 'Nothing revealed yet.' : `Revealed: ${names.slice(0, n).join(', ')}.`}</p>
+      <div className="btn-row">
+        <button className="big go" disabled={n >= 3 || Boolean(blocked)} onClick={() => send('podium:set', n + 1)}>{n >= 3 ? 'All revealed' : `Reveal ${names[n]}`}</button>
+        <button className="big" disabled={n === 0} onClick={() => send('podium:set', 0)}>Hide podium</button>
+      </div>
+      {blocked && n < 3 && <p className="bad">{blocked}</p>}
+    </>
+  );
+}
+
+// One button per effect. The projector plays it with the chosen chamber; nothing is scored or stored.
+function EffectsPreview({ chambers, hidden, send }) {
+  const [chamber, setChamber] = useState(chambers[0]?.id);
+  return (
+    <>
+      <label className="volume">
+        <span>Show it on</span>
+        <select value={chamber} onChange={(e) => setChamber(e.target.value)}>
+          {chambers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+      </label>
+      <div className="btn-row">
+        {PREVIEW_EFFECTS.map((p) => (
+          <button key={p.id} className="big" disabled={p.showsRanks && hidden} onClick={() => send('effects:preview', { name: p.id, chamber })}>{p.label}</button>
+        ))}
+      </div>
+      <p className="hint">Previews play on the projector even when effects are off in the box above, and ignore the on/off switches in effects.json. Intensity still applies. {hidden && 'Podium reveal is disabled while scores are hidden because it shows the real top three. '}Curtains show the current round name.</p>
+    </>
   );
 }

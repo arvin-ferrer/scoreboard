@@ -1,0 +1,139 @@
+/* Projector effects. Only transform, opacity and the individual translate/rotate properties are animated,
+   so it stays smooth on an ordinary laptop. Text always keeps a dark shadow so it reads during any effect.
+   Art slots: flames, spotlight and confetti are drawn here with CSS and canvas until real art is supplied. */
+
+/* Layers sit above the board. `.projector > *` sets z-index 1, so these selectors are one step stronger. */
+.projector > .fx-layer { position: absolute; inset: 0; pointer-events: none; }
+.projector > .fx-canvas { z-index: 20; width: 100%; height: 100%; }
+.projector > .fx-word-layer, .projector > .fx-spot { z-index: 30; }
+.projector > .fx-curtains { z-index: 40; overflow: hidden; }
+
+/* Rows: movement, and room for extra transitions. */
+.projector .proj-row { transition: transform 900ms cubic-bezier(0.3, 0.9, 0.3, 1), rotate 600ms ease, background-color 600ms ease; }
+.proj-rank, .proj-row .logo, .proj-name, .proj-total { position: relative; z-index: 1; }
+.proj-row.fx-hot { z-index: 4; }
+
+/* 5. Score pop: floats up inside the row, between the name and the total. */
+.fx-pop { position: absolute; z-index: 5; right: calc(var(--row-h) * 2.1); top: 8%; font-size: calc(var(--row-h) * 0.62); font-weight: 800; line-height: 1;
+  pointer-events: none; text-shadow: 0 0 0.5vh #000, 0 0.3vh 0.8vh #000; animation: fx-pop-float var(--pop-ms, 1500ms) ease-out both; }
+.fx-pop.pos { color: #8dffae; }
+.fx-pop.neg { color: #ff8f84; }
+@keyframes fx-pop-float {
+  0% { transform: translateY(35%) scale(0.6); opacity: 0; }
+  15% { transform: translateY(0) scale(1.15); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translateY(-75%) scale(1); opacity: 0; }
+}
+
+/* 1. Streak fire: flames inside the row, behind the text. Tier 1, 2, 3 = streak 3, 5, 7 (set in effects.json). */
+.flames { position: absolute; inset: 0; z-index: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.flames i { position: absolute; bottom: -12%; width: 9%; height: var(--flame-h); border-radius: 50% 50% 18% 18% / 85% 85% 15% 15%; transform-origin: 50% 100%; opacity: 0.55;
+  background: radial-gradient(ellipse at 50% 90%, #fff3a0 0 14%, #ffb02e 42%, #ff5a1f 72%, #ff5a1f00 100%); animation: fx-flicker var(--d, 0.7s) ease-in-out infinite alternate; }
+.flames i:nth-child(1) { left: 1%; --d: 0.62s; } .flames i:nth-child(2) { left: 15%; --d: 0.81s; } .flames i:nth-child(3) { left: 29%; --d: 0.7s; }
+.flames i:nth-child(4) { left: 43%; --d: 0.9s; } .flames i:nth-child(5) { left: 57%; --d: 0.66s; } .flames i:nth-child(6) { left: 71%; --d: 0.78s; } .flames i:nth-child(7) { left: 86%; --d: 0.6s; }
+.flame-1 .flames i { --flame-h: 48%; } .flame-1 .flames i:nth-child(even) { display: none; }
+.flame-2 .flames i { --flame-h: 75%; }
+.flame-3 .flames i { --flame-h: 105%; opacity: 0.62; }
+.proj-row.flame-2 { box-shadow: 0 0 1.4vh #ff7a1a66; }
+.proj-row.flame-3 { box-shadow: 0 0 2.6vh 0.4vh #ff7a1a99; }
+@keyframes fx-flicker { from { transform: scaleY(0.82) skewX(-5deg); } to { transform: scaleY(1.12) skewX(6deg); } }
+
+/* 2. Shake and red flash. translate is separate from the row's own transform, so they never fight. */
+.proj-row::after { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; background: #ff2a2a; opacity: 0; pointer-events: none; }
+.proj-row.fx-shake { animation: fx-shake var(--shake-ms, 700ms) ease-in-out both; }
+.proj-row.fx-shake::after { animation: fx-flash var(--shake-ms, 700ms) ease-out both; }
+@keyframes fx-shake { 0%, 100% { translate: 0 0; } 12% { translate: -1.1vw 0.3vh; } 28% { translate: 1vw -0.3vh; } 44% { translate: -0.8vw 0.2vh; } 60% { translate: 0.6vw 0; } 80% { translate: -0.3vw 0; } }
+@keyframes fx-flash { 0% { opacity: 0; } 15% { opacity: 0.55; } 100% { opacity: 0; } }
+
+/* 4. New leader: the row stands out under the spotlight. */
+.proj-row.fx-leader { z-index: 6; box-shadow: 0 0 3vh 0.6vh #ffe9a8aa; }
+
+/* 6. Overtake: the passing row rides above the rest and leaves a short trail where it came from. */
+.proj-row.fx-overtake { z-index: 5; }
+.proj-row.fx-overtake::before { content: ''; position: absolute; left: 3%; right: 3%; top: 55%; height: 130%; z-index: -1; pointer-events: none;
+  background: linear-gradient(var(--chamber), #0000); animation: fx-trail var(--ms, 1100ms) ease-out both; }
+@keyframes fx-trail { 0% { opacity: 0.5; transform: scaleY(0.4); } 40% { opacity: 0.4; transform: scaleY(1); } 100% { opacity: 0; transform: scaleY(1); } }
+
+/* 8. Off-key: grey and a slight tilt while the total is below 0. */
+.proj-row.fx-offkey { rotate: -1.2deg; background-color: #2d2d2dd9; border-left-color: #777; }
+.proj-row.fx-offkey .logo { filter: grayscale(1) brightness(0.9); }
+.proj-row.fx-offkey .proj-total { color: #c9c9c9; }
+
+/* 9. Final minute, and the metronome beside the clock. */
+.proj-digits { display: inline-block; transform-origin: 100% 60%; }
+.proj-timer.pulse-1 .proj-digits { animation: fx-pulse 1s ease-in-out infinite; }
+.proj-timer.pulse-2 .proj-digits { animation: fx-pulse 0.5s ease-in-out infinite; }
+@keyframes fx-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+.metro { position: relative; flex: none; width: 7vh; height: 12vh; align-self: center; }
+.metro::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 52%; clip-path: polygon(24% 0, 76% 0, 100% 100%, 0 100%); background: linear-gradient(#8a622d, #3a2814); }
+.metro i { position: absolute; left: calc(50% - 0.3vh); bottom: 14%; width: 0.6vh; height: 82%; border-radius: 1vh; background: #e0bb62; transform-origin: 50% 100%;
+  animation: fx-metro var(--swing, 1s) ease-in-out infinite alternate; }
+.metro i::after { content: ''; position: absolute; left: -0.9vh; top: 24%; width: 2.4vh; height: 1.8vh; border-radius: 0.5vh; background: #f6edda; box-shadow: 0 0 0.5vh #000; }
+.metro.mid { --swing: 0.8s; } .metro.fast { --swing: 0.5s; }
+@keyframes fx-metro { from { transform: rotate(-26deg); } to { transform: rotate(26deg); } }
+
+/* 3. Word flash. A dark band behind the word keeps it readable over the board. */
+.fx-word-layer { display: grid; place-items: center; }
+.fx-word-band { position: absolute; left: 0; right: 0; top: 50%; height: 34vh; translate: 0 -50%; background: linear-gradient(#0000, #000b 22%, #000b 78%, #0000);
+  animation: fx-fade var(--ms) ease both; }
+.fx-word { position: relative; font-family: var(--display); font-size: 25vh; line-height: 1; white-space: nowrap; color: #ffe08a;
+  text-shadow: 0 0 1vh #000, 0 0.6vh 1.6vh #000, 0 0 5vh #e0bb62aa; animation: fx-sweep var(--ms) cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes fx-sweep { 0% { transform: translateX(-85vw) skewX(-10deg); opacity: 0; } 22% { transform: translateX(0) skewX(0); opacity: 1; } 78% { transform: translateX(0) scale(1.04); opacity: 1; } 100% { transform: translateX(85vw) skewX(10deg); opacity: 0; } }
+@keyframes fx-fade { 0% { opacity: 0; } 14% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0; } }
+
+/* 4. Spotlight: dims the board except around the new leader, with a beam from above. */
+.fx-spot-shade { position: absolute; inset: 0; background: radial-gradient(ellipse var(--rw) var(--rh) at var(--x) var(--y), #0000 0 55%, #000a 100%); animation: fx-fade var(--ms) ease both; }
+.fx-spot-beam { position: absolute; left: var(--x); top: 0; height: var(--y); width: var(--beam-w); translate: -50% 0; clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%);
+  background: linear-gradient(#fff4cc55, #fff4cc00); animation: fx-fade var(--ms) ease both; }
+
+/* 10. Curtains. Both panels use the bundled curtain art; the title waits until they have closed. */
+.fx-curtain { position: absolute; top: 0; bottom: 0; width: 50.5vw; will-change: transform; }
+.fx-curtain span { position: absolute; inset: 0; background: url('../../../assets/ui/optimized/blue_curtain_1.png') center / 100% 100% no-repeat; }
+.fx-curtain.left { left: 0; animation: fx-in-left var(--close) cubic-bezier(0.4, 0, 0.2, 1) both, fx-out-left var(--open) cubic-bezier(0.6, 0, 0.8, 0.6) var(--open-at) forwards; }
+.fx-curtain.right { right: 0; animation: fx-in-right var(--close) cubic-bezier(0.4, 0, 0.2, 1) both, fx-out-right var(--open) cubic-bezier(0.6, 0, 0.8, 0.6) var(--open-at) forwards; }
+.fx-curtain.right span { transform: scaleX(-1); }
+@keyframes fx-in-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes fx-out-left { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@keyframes fx-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes fx-out-right { from { transform: translateX(0); } to { transform: translateX(100%); } }
+.fx-curtain-title { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--display); font-size: 26vh; line-height: 1; color: #ffe08a;
+  text-shadow: 0 0 1.2vh #000, 0 0.8vh 2.4vh #000; animation: fx-title-in 500ms ease var(--close) both, fx-title-out 350ms ease calc(var(--open-at) - 350ms) forwards; }
+@keyframes fx-title-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+@keyframes fx-title-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* 11. Podium. */
+.podium { height: 100%; display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; gap: 2vw; padding: 0 2vw; }
+.pod { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 0; }
+.pod-who { min-height: 27vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 0.6vh; max-width: 100%; text-align: center; }
+.pod-who .logo { width: 13vh; height: 13vh; border-width: 0.4vh; }
+.pod-who .logo.fallback { font-size: 7vh; }
+.pod-name { max-width: 100%; font-size: 4.6vh; font-weight: 700; line-height: 1.1; text-shadow: 0 0.3vh 1vh #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pod-total { font-size: 7.4vh; font-weight: 800; line-height: 1; color: #ffe08a; font-variant-numeric: tabular-nums; text-shadow: 0 0.3vh 1vh #000; }
+.pod-block { width: 100%; display: grid; place-items: center; border-radius: 1vh 1vh 0 0; border: 0.5vh solid #e0bb62; border-bottom: 0;
+  background: linear-gradient(#000a, #000a), url('../../../assets/ui/optimized/wooden_wall.png') center / cover; }
+.pod-block span { font-family: var(--display); font-size: 13vh; line-height: 1; color: #e0bb62; text-shadow: 0 0.4vh 1vh #000; }
+.pod-1 .pod-block { height: 26vh; } .pod-2 .pod-block { height: 19vh; } .pod-3 .pod-block { height: 13vh; }
+.pod:not(.revealed) .pod-block { opacity: 0.55; }
+.pod.revealed { --glow: var(--chamber, #e0bb62); }
+.pod.revealed .pod-block { border-color: var(--glow); }
+.pod.fresh .pod-who { animation: fx-pod-in 900ms cubic-bezier(0.2, 1.2, 0.4, 1) both; }
+.pod.fresh .pod-block { animation: fx-pod-block 1400ms ease-out both; }
+.pod-1.fresh .pod-who { filter: drop-shadow(0 0 2vh #ffe08acc); }
+@keyframes fx-pod-in { from { transform: translateY(10vh) scale(0.7); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fx-pod-block { 0% { filter: brightness(2.2); } 100% { filter: none; } }
+
+/* Reduced: no shaking, no red flash, no sweeping, no swinging. Words and curtains fade instead. */
+.fx-reduced .fx-word { animation: fx-fade var(--ms) ease both; }
+.fx-reduced .proj-row.fx-overtake::before { display: none; }
+.fx-reduced .flames i { animation-duration: 1.6s; }
+.fx-reduced .proj-timer.pulse-1 .proj-digits, .fx-reduced .proj-timer.pulse-2 .proj-digits { animation: fx-soft 1.4s ease-in-out infinite; }
+.fx-reduced .metro i { animation-duration: 1.2s; }
+.fx-reduced .fx-curtain.left, .fx-reduced .fx-curtain.right { transform: none; animation: fx-fade-in var(--close) ease both, fx-fade-out var(--open) ease var(--open-at) forwards; }
+.fx-reduced .pod.fresh .pod-who { animation: fx-fade-in 600ms ease both; }
+@keyframes fx-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+@keyframes fx-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fx-fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* Effects off: only the plain board remains. */
+.fx-off .flames, .fx-off .fx-pop { display: none; }
+@media (prefers-reduced-motion: reduce) { .projector .proj-row { transition: none; } }

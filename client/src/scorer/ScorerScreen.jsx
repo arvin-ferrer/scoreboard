@@ -6,6 +6,7 @@ import QuickButtons from './QuickButtons.jsx';
 import NumberPad from './NumberPad.jsx';
 import UndoToast from './UndoToast.jsx';
 import OfflineBanner from './OfflineBanner.jsx';
+import ChamberLogo from '../ChamberLogo.jsx';
 
 export default function ScorerScreen() {
   const { data, settings, online, unsent, live, totals, score, undo } = useScoreboard();
@@ -33,7 +34,7 @@ export default function ScorerScreen() {
   };
 
   return (
-    <div className="scorer" style={{ '--btn-h': `${settings.buttonHeightPx}px`, '--cols': settings.cardColumns }}>
+    <div className={`scorer fxmode-${data.state.effectsOn === false ? 'off' : data.state.effectsIntensity ?? 'full'}`} style={{ '--btn-h': `${settings.buttonHeightPx}px`, '--cols': settings.cardColumns }}>
       <header className="topbar"><h1>{round.name}</h1></header>
       <OfflineBanner online={online} unsent={unsent} texts={settings.texts} />
       <main className="layout">
@@ -49,7 +50,10 @@ export default function ScorerScreen() {
         <section className="panel">
           {!canScore ? <p className="hint">{settings.texts.noScoring}</p> : (
             <>
-              <h2>{chamber ? chamber.name : settings.texts.pickChamber}</h2>
+              <div className="panel-head" style={chamber ? { '--chamber': chamber.colour } : undefined}>
+                {chamber && <div className="oval"><ChamberLogo chamber={chamber} /></div>}
+                <h2>{chamber ? chamber.name : settings.texts.pickChamber}</h2>
+              </div>
               <QuickButtons groups={round.groups} roundId={data.state.round} chamber={chamber} live={live} disabled={!chamber} onScore={doScore} />
               <NumberPad disabled={!chamber} max={settings.customPadMaxPoints} label={settings.customLabel} onScore={doScore} />
             </>

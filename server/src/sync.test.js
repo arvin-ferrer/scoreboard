@@ -148,4 +148,42 @@ describe('socket sync', () => {
     expect(c.snap.state.scoresHidden).toBe(true);
     expect(c.snap.state.tieOrder).toEqual(['c02']);
   });
+  it('music volume and mute are admin only, kept between 0 and 1, and survive a restart', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-'));
+    cleanup.push(async () => fs.rmSync(dir, { recursive: true, force: true }));
+    const file = path.join(dir, 's.sqlite');
+    const first = await start(file);
+    const admin = await client(first.url), other = await client(first.url);
+    expect(admin.snap.state.musicVolume).toBe(0.7);
+    expect(admin.snap.state.musicMuted).toBe(false);
+
+    expect((await ack(other.s, 'music:set', { volume: 0.1 })).denied).toBe(true);
+    await login(admin.s);
+    const seen = nextState(other.s);
+    await ack(admin.s, 'music:set', { volume: 3 });
+    expect((await seen).state.musicVolume).toBe(1);
+    await ack(admin.s, 'music:set', { volume: 0.4, muted: true });
+    await ack(admin.s, 'music:set', { volume: 'loud' }); // junk is ignored
+    await ack(admin.s, 'music:set', null);
+
+    admin.s.close();
+    await first.sb.close();
+    cleanup.pop();
+    const second = await start(file);
+    const c = await client(second.url);
+    expect(c.snap.state.musicVolume).toBe(0.4);
+    expect(c.snap.state.musicMuted).toBe(true);
+  });
+
+  it('chambers carry logo and song URLs, or null while the files are missing', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-'));
+    cleanup.push(async () => fs.rmSync(dir, { recursive: true, force: true }));
+    const { url } = await start(path.join(dir, 's.sqlite'));
+    const { snap } = await client(url);
+    expect(snap.chambers).toHaveLength(15);
+    for (const c of snap.chambers) expect(c).toHaveProperty('songUrl');
+    // Files that exist get a URL the server really serves; a missing one is a 404, not the app page.
+    const miss = await fetch(`${url}/chamber-assets/c99/song.mp3`);
+    expect(miss.status).toBe(404);
+  });
 });

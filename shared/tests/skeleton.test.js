@@ -15,7 +15,7 @@ describe('skeleton data', () => {
     for (const r of Object.values(rounds))
       for (const g of r.groups) expect(g.values.every(Number.isInteger)).toBe(true);
   });
-  it('chambers.csv has 8 chambers', () => {
-    expect(read('data/chambers.csv').trim().split('\n').slice(1)).toHaveLength(8);
+  it('chambers.csv has 15 chambers', () => {
+    expect(read('data/chambers.csv').trim().split('\n').slice(1)).toHaveLength(15);
   });
 });

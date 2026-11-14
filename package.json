@@ -8,7 +8,8 @@
     "dev": "concurrently -n server,client -c blue,magenta \"node --watch server/src/index.js\" \"vite --config client/vite.config.js\"",
     "test": "vitest run",
     "build": "vite build --config client/vite.config.js",
-    "start": "node server/src/index.js"
+    "start": "node server/src/index.js",
+    "load-test": "node scripts/load-test.js"
   },
   "dependencies": {
     "better-sqlite3": "^13.2.0",

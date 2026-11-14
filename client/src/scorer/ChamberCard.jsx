@@ -1,11 +1,13 @@
 import { fmtPoints } from '../settings.js';
 import { recentFor } from '../entries.js';
+import ChamberLogo from '../ChamberLogo.jsx';
 
 export default function ChamberCard({ chamber, total, live, selected, recentCount, unsentText, onSelect, onUndo }) {
   const recent = recentFor(live, chamber.id, recentCount);
   return (
     <div className={`card${selected ? ' selected' : ''}`} style={{ '--chamber': chamber.colour }}>
       <button className="card-main" onClick={onSelect} aria-pressed={selected}>
+        <ChamberLogo chamber={chamber} />
         <span className="card-name">{chamber.name}</span>
         <span className="card-total">{total}</span>
       </button>
