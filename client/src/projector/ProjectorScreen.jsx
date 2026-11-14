@@ -17,6 +17,13 @@ import './effects/effects.css';
 // Up to 8 chambers fit in one column. More than that use two columns, so the rows stay large.
 const ROWS_PER_COLUMN = 8;
 
+// The top 3 rows are taller than the rest, 1st the tallest (in units of one normal row).
+// A thin divider after 3rd takes DIVIDER_GAP. EXTRA is the most space this can add to the first column,
+// reserved always so the row size never jumps when scores are hidden or revealed.
+const TOP_HEIGHTS = [1.4, 1.25, 1.15];
+const DIVIDER_GAP = 0.25;
+const EXTRA = TOP_HEIGHTS.reduce((s, h) => s + h - 1, 0) + DIVIDER_GAP;
+
 // Read-only big-screen leaderboard. Rows slide to their new rank when scores change.
 // Visual effects (src/projector/effects) are display only and are set off by live entries, the timer and round changes.
 export default function ProjectorScreen() {
@@ -40,6 +47,25 @@ export default function ProjectorScreen() {
   const place = (id) => (hidden ? chambers.findIndex((c) => c.id === id) : order.indexOf(id));
   const columns = chambers.length > ROWS_PER_COLUMN ? 2 : 1;
   const rows = Math.ceil(chambers.length / columns);
+
+  // Medals: only for a decided 1st, 2nd or 3rd, and never while scores are hidden. A place that is
+  // still tied gets no medal, like the podium, which cannot be revealed until the tie is settled.
+  const medalAt = (p) => !hidden && p < 3 && order[p] !== undefined && !tied.has(order[p]);
+  const showDivider = chambers.length > 3 && [0, 1, 2].every(medalAt);
+  // Where each row sits in the first column, in units of one normal row: its top (y) and height (h).
+  const spots = new Map();
+  let y = 0;
+  chambers.forEach((_, p) => {
+    const id = hidden ? chambers[p].id : order[p];
+    const col = Math.floor(p / rows);
+    const r = p % rows;
+    if (col > 0) { spots.set(id, { y: r, h: 1 }); return; }
+    if (r === 3 && showDivider) y += DIVIDER_GAP;
+    const h = medalAt(p) ? TOP_HEIGHTS[p] : 1;
+    spots.set(id, { y, h });
+    y += h;
+  });
+  const dividerY = TOP_HEIGHTS.reduce((s, h) => s + h, 0) + DIVIDER_GAP / 2;
   const roundName = (id) => data.scoring.rounds[id]?.name ?? '';
   const podiumView = fx.displayRound === fx.config.effects.podium.round || fx.podiumDemo !== null;
   const podiumSteps = fx.podiumDemo ?? (hidden ? 0 : state.podiumRevealed);
@@ -64,14 +90,18 @@ export default function ProjectorScreen() {
         {podiumView ? (
           <Podium order={order} chambers={chambers} totals={totals} revealed={podiumSteps} fresh={fx.fresh} animate={fx.on} />
         ) : (
-          <ol className="proj-board" style={{ '--rows': rows, '--cols': columns }}>
+          <ol className="proj-board" style={{ '--rows': rows, '--cols': columns, '--units': rows + (chambers.length > 3 ? EXTRA : 0) }}>
+            {showDivider && <li className="proj-divider" aria-hidden="true" style={{ '--y': dividerY }} />}
             {chambers.map((c) => {
               const i = place(c.id);
+              const spot = spots.get(c.id);
+              const medal = medalAt(i) ? i + 1 : 0;
               const total = totals[c.id] ?? 0;
               const tier = fx.tier(c.id);
               const rowPops = fx.pops.filter((p) => p.chamber === c.id);
               const classes = [
                 'proj-row',
+                medal > 0 && `medal medal-${medal}`,
                 tier > 0 && `flame-${tier}`,
                 fx.offKey(c.id, total) && 'fx-offkey',
                 fx.shaking(c.id) && 'fx-shake',
@@ -82,7 +112,7 @@ export default function ProjectorScreen() {
               return (
                 <li
                   key={c.id} data-chamber={c.id} className={classes}
-                  style={{ '--col': Math.floor(i / rows), '--row': i % rows, '--chamber': c.colour, '--pop-ms': `${ms.scorePop.ms}ms`, '--shake-ms': `${ms.shake.ms}ms`, '--ms': `${ms.overtake.ms}ms` }}
+                  style={{ '--col': Math.floor(i / rows), '--y': spot.y, '--h': spot.h, '--chamber': c.colour, '--pop-ms': `${ms.scorePop.ms}ms`, '--shake-ms': `${ms.shake.ms}ms`, '--ms': `${ms.overtake.ms}ms` }}
                 >
                   {tier > 0 && <span className="flames" aria-hidden="true">{Array.from({ length: 7 }, (_, k) => <i key={k} />)}</span>}
                   <span className="proj-rank">{hidden ? '' : i + 1}</span>

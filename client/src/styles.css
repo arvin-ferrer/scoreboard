@@ -50,6 +50,11 @@ h1, h2 { font-family: var(--display); font-weight: 400; }
 .card-main:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; }
 .card-name { flex: 1; font-size: 1.05rem; font-weight: 600; }
 .card-total { font-size: 2rem; font-weight: 700; }
+/* A small medal on the top 3 cards. Far smaller than the scoring buttons, so it never competes with them. */
+.card-medal { flex: none; display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 50%; font-size: 0.95rem; font-weight: 700; color: #14100c; }
+.card-medal.medal-1 { background: radial-gradient(circle at 35% 30%, #ffd86b, #c99a2e); }
+.card-medal.medal-2 { background: radial-gradient(circle at 35% 30%, #dfe5ec, #8e99a6); }
+.card-medal.medal-3 { background: radial-gradient(circle at 35% 30%, #e0975a, #8a5226); }
 .logo { flex: none; width: 44px; height: 44px; border-radius: 50%; object-fit: contain; background: #0006; border: 2px solid var(--chamber, var(--line)); }
 .logo.fallback { display: grid; place-content: center; font-weight: 700; font-size: 1.3rem; background: var(--chamber, #555); color: #14100c; }
 .recent { list-style: none; margin: 0; padding: 0 0.6rem 0.5rem; font-size: 0.85rem; min-height: 1.5rem; }
