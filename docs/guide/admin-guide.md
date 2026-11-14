@@ -43,6 +43,8 @@ On the projector, the timer turns red in the last 10 seconds and blinks at 0:00.
 
 Shows **Showing** or **Hidden**. Tap **Hide scores** / **Reveal scores**.
 
+On the projector, the top 3 rows are taller, with a gold, silver or bronze rank badge, border and glow, and a thin gold line sits under 3rd place. A place that is still tied gets no medal until you settle it under **Tied chambers**. While scores are hidden there are no medals and all rows are the same size.
+
 While hidden:
 
 - The projector shows **?** instead of totals, no rank numbers, and the chambers in their list order (so the order gives nothing away).

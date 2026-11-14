@@ -23,6 +23,8 @@ One page. Read it before the round starts.
 3. A message appears at the bottom: **+20 to Chamber 1**, with an **Undo** button. It stays for 6 seconds.
 4. The chamber's total changes at once, and the entry appears under the card with its reason, for example **+20 Correct**.
 
+A small gold, silver or bronze number appears on the cards of the chambers in 1st, 2nd and 3rd place. It is only for information. A place that is still tied has no medal.
+
 The chamber stays selected, so for the next entry to the same chamber you only tap the points button. For a different chamber, tap its card first.
 
 ## 3. The buttons in each round

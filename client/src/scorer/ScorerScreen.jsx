@@ -20,6 +20,9 @@ export default function ScorerScreen() {
   const round = data.scoring.rounds[data.state.round];
   const chamber = data.chambers.find((c) => c.id === selected);
   const canScore = !round.tiebreak && round.groups.length > 0;
+  // A small medal on the current 1st, 2nd and 3rd. A place that is still tied gets none.
+  const tied = new Set(data.ties.flatMap((t) => t.chambers));
+  const medalOf = (id) => { const p = data.order.indexOf(id); return p >= 0 && p < 3 && !tied.has(id) ? p + 1 : 0; };
 
   const doScore = (points, label) => {
     if (!chamber) return;
@@ -41,7 +44,7 @@ export default function ScorerScreen() {
         <section className="cards">
           {data.chambers.map((c) => (
             <ChamberCard
-              key={c.id} chamber={c} total={totals[c.id]} live={live} selected={c.id === selected}
+              key={c.id} chamber={c} total={totals[c.id]} medal={medalOf(c.id)} live={live} selected={c.id === selected}
               recentCount={settings.recentEntries} unsentText={settings.texts.unsent}
               onSelect={() => setSelected(c.id)} onUndo={doUndo}
             />
