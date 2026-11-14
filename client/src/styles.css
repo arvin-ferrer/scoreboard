@@ -1,0 +1,13 @@
+@font-face {
+  font-family: 'General Sans';
+  src: url('../assets/ui/fonts/general-sans/GeneralSans-Regular.otf') format('opentype');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'General Sans';
+  src: url('../assets/ui/fonts/general-sans/GeneralSans-Bold.otf') format('opentype');
+  font-weight: 700;
+}
+html, body { margin: 0; height: 100%; font-family: 'General Sans', sans-serif; background: #111; color: #eee; }
+.splash { min-height: 100%; display: grid; place-content: center; justify-items: center; gap: 1rem; }
+.splash-logo { max-width: 60vw; max-height: 50vh; }
