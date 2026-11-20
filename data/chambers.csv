@@ -1,14 +1,14 @@
 id,name,colour,logo,song,members
-c01,Chamber 1,#e63946,client/assets/chambers/c01/logo.png,client/assets/chambers/c01/song.mp3,3
-c02,Chamber 2,#f4a261,client/assets/chambers/c02/logo.png,client/assets/chambers/c02/song.mp3,3
-c03,Chamber 3,#e9c46a,client/assets/chambers/c03/logo.png,client/assets/chambers/c03/song.mp3,2
-c04,Chamber 4,#2a9d8f,client/assets/chambers/c04/logo.png,client/assets/chambers/c04/song.mp3,3
-c05,Chamber 5,#457b9d,client/assets/chambers/c05/logo.png,client/assets/chambers/c05/song.mp3,3
-c06,Chamber 6,#6a4c93,client/assets/chambers/c06/logo.png,client/assets/chambers/c06/song.mp3,2
-c07,Chamber 7,#ff70a6,client/assets/chambers/c07/logo.png,client/assets/chambers/c07/song.mp3,3
-c08,Chamber 8,#8ac926,client/assets/chambers/c08/logo.png,client/assets/chambers/c08/song.mp3,3
-c09,Chamber 9,#4cc9f0,client/assets/chambers/c09/logo.png,client/assets/chambers/c09/song.mp3,
-c10,Chamber 10,#b5179e,client/assets/chambers/c10/logo.png,client/assets/chambers/c10/song.mp3,
+c01,1/4 ma'am?,#e63946,client/assets/chambers/c01/logo.png,client/assets/chambers/c01/song.mp3,3
+c02,NPC,#f4a261,client/assets/chambers/c02/logo.png,client/assets/chambers/c02/song.mp3,3
+c03,Raye and Friends,#e9c46a,client/assets/chambers/c03/logo.png,client/assets/chambers/c03/song.mp3,3
+c04,Je Boys,#2a9d8f,client/assets/chambers/c04/logo.png,client/assets/chambers/c04/song.mp3,2
+c05,yearners,#457b9d,client/assets/chambers/c05/logo.png,client/assets/chambers/c05/song.mp3,3
+c06,AXCSIS,#6a4c93,client/assets/chambers/c06/logo.png,client/assets/chambers/c06/song.mp3,3
+c07,O(3),#ff70a6,client/assets/chambers/c07/logo.png,client/assets/chambers/c07/song.mp3,3
+c08,Java rice,#8ac926,client/assets/chambers/c08/logo.png,client/assets/chambers/c08/song.mp3,3
+c09,International Criminal Court,#4cc9f0,client/assets/chambers/c09/logo.png,client/assets/chambers/c09/song.mp3,2
+c10,K-Means Kalbo Klustering,#b5179e,client/assets/chambers/c10/logo.png,client/assets/chambers/c10/song.mp3,3
 c11,Chamber 11,#06d6a0,client/assets/chambers/c11/logo.png,client/assets/chambers/c11/song.mp3,
 c12,Chamber 12,#9d8189,client/assets/chambers/c12/logo.png,client/assets/chambers/c12/song.mp3,
 c13,Chamber 13,#ffb703,client/assets/chambers/c13/logo.png,client/assets/chambers/c13/song.mp3,

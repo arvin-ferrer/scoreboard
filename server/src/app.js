@@ -157,6 +157,16 @@ export function createScoreboard({ root, dbPath, clock = Date.now, adminPin, cha
     // Andante: "defending against" shown on the projector. Display only; nothing is scored from it.
     on('defense:set', (m, ack) => { const ok = game.setDefense(m?.defender, m?.attackers); if (ok) broadcastState(); reply(ack, { ok }); });
     on('defense:clear', () => { game.clearDefense(); broadcastState(); });
+    // Reset every total to 0. Needs the word RESET so a stray tap can't do it. Everyone gets a fresh snapshot,
+    // which screens replay quietly (no effects for hundreds of voids).
+    on('scores:reset', (m, ack) => {
+      if (m?.confirm !== 'RESET') return reply(ack, { ok: false });
+      const voided = log.voidAll({ device: 'admin-reset' });
+      game.clearTieOrder();
+      game.setPodium(0);
+      io.emit('snapshot', snapshot());
+      reply(ack, { ok: true, voided });
+    });
     // Rename a chamber. Scores are stored by id, so a rename never touches the score log.
     on('chamber:rename', (m, ack) => {
       const c = chambers.find((x) => x.id === m?.id);

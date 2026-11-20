@@ -56,6 +56,19 @@ export function openScoreLog(dbPath = ':memory:', clock = Date.now) {
       return { status: 'added', entry: byId.get(id) };
     },
 
+    // Reset: one void for every entry still counting, in one transaction, so totals go to 0 and history keeps it all.
+    voidAll({ device = '' } = {}) {
+      const live = db.prepare(
+        `SELECT * FROM entries WHERE voids IS NULL AND id NOT IN (SELECT voids FROM entries WHERE voids IS NOT NULL) ORDER BY seq`
+      ).all();
+      const now = clock();
+      db.transaction(() => {
+        for (const t of live) insert.run({ id: `reset-${now}-${t.seq}`, chamber: t.chamber, points: 0, round: t.round,
+          label: 'reset', device: str(device), host_time: now, voids: t.id });
+      })();
+      return live.length;
+    },
+
     // Rebuilt from the log every time: sum of entries that are not voided.
     totals(chamberIds = []) {
       const totals = Object.fromEntries(chamberIds.map((c) => [c, 0]));

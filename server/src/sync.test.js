@@ -201,6 +201,31 @@ describe('socket sync', () => {
     expect(saved.find((c) => c.id === 'c03')).toMatchObject({ name: 'Bach, Inc.', logo: 'client/assets/chambers/c03/logo.png' });
   });
 
+  it('reset: needs admin and the word RESET, voids every live entry, totals 0, history kept, ties cleared', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-'));
+    cleanup.push(async () => fs.rmSync(dir, { recursive: true, force: true }));
+    const { url } = await start(path.join(dir, 's.sqlite'));
+    const a = await client(url), b = await client(url);
+    for (const [id, chamber, points] of [['e1', 'c01', 30], ['e2', 'c02', -10], ['e3', 'c01', 20]]) await ack(a.s, 'entry:add', { id, chamber, points, round: 'adagio', device: 'A' });
+    await ack(a.s, 'entry:void', { id: 'v1', voids: 'e3', device: 'A' }); // already voided: must not be voided twice
+
+    expect((await ack(a.s, 'scores:reset', { confirm: 'RESET' })).ok).toBe(false); // not an admin
+    await login(a.s);
+    expect((await ack(a.s, 'scores:reset', { confirm: 'reset' })).ok).toBe(false); // wrong word
+    await ack(a.s, 'tie:pick', 'c05');
+    const fresh = new Promise((r) => b.s.once('snapshot', r));
+    expect(await ack(a.s, 'scores:reset', { confirm: 'RESET' })).toEqual({ ok: true, voided: 2 });
+    const snap = await fresh;
+    expect(Object.values(snap.totals).every((t) => t === 0)).toBe(true);
+    expect(snap.entries).toHaveLength(6); // 3 scores, 1 undo, 2 reset voids: nothing deleted
+    expect(snap.state.tieOrder).toEqual([]);
+
+    expect((await ack(a.s, 'entry:add', { id: 'e4', chamber: 'c03', points: 10, round: 'adagio', device: 'A' })).status).toBe('added');
+    const again = await client(url);
+    expect(again.snap.totals.c03).toBe(10); // scoring carries on after a reset
+    expect((await ack(a.s, 'scores:reset', { confirm: 'RESET' })).voided).toBe(1);
+  });
+
   it('chambers carry logo and song URLs, or null while the files are missing', async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-'));
     cleanup.push(async () => fs.rmSync(dir, { recursive: true, force: true }));

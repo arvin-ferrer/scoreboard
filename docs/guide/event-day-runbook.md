@@ -31,7 +31,7 @@ Port is **3000** on the host (change with the `PORT` environment variable only i
 - [ ] `shared/settings.json`: change `adminPin` from the committed default to a PIN only the admins know. Set `backupDir` to a folder on the USB drive, e.g. `E:\\scoreboard-backup` (two backslashes inside JSON). Copy the same file to the standby.
 - [ ] `data/chambers.csv` has the final chamber names and colours. Logos (and songs, if any) are in `client/assets/chambers/<id>/`. See [Configuration](configuration.md#chamberscsv).
 - [ ] `shared/scoring.json` button values match the final mechanics. Restart the server after any edit.
-- [ ] **Clear the test scores.** The score log cannot be edited, so start the event with a fresh file. With the server stopped, rename `data\scores.sqlite` on **both** laptops:
+- [ ] **Clear the test scores.** Quick way: **Reset scores** on `/admin` (totals to 0; the test entries stay in History, struck through). Clean way: start the event with a fresh file. With the server stopped, rename `data\scores.sqlite` on **both** laptops:
 
   ```bat
   ren data\scores.sqlite scores.before-event.sqlite

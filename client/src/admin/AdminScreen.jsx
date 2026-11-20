@@ -76,6 +76,7 @@ function Controls({ sb }) {
               <button key={m} className={`big ${t.duration === m * 60 ? 'on' : ''}`} onClick={() => send('timer:reset', m * 60)}>{m < 1 ? `${m * 60} s` : `${m} min`}</button>
             ))}
           </div>
+          <CustomTimer onSet={(sec) => send('timer:reset', sec)} />
           <div className="btn-row">
             {status === 'running'
               ? <button className="big" onClick={() => send('timer:pause')}>Pause</button>
@@ -171,6 +172,11 @@ function Controls({ sb }) {
           <EffectsPreview chambers={chambers} hidden={state.scoresHidden} send={send} />
         </section>
 
+        <section className="box wide danger">
+          <h2>Reset scores</h2>
+          <ResetScores send={send} />
+        </section>
+
         <section className="box wide">
           <h2>All entries</h2>
           <HistoryTable data={data} entries={entries} onUndo={undo} />
@@ -215,6 +221,62 @@ function DefenseControls({ state, chambers, name, send }) {
       )}
       {Object.keys(defense).length > 0 && <button className="big" onClick={() => send('defense:clear')}>Clear all</button>}
     </div>
+  );
+}
+
+// Any length the presets don't cover: minutes and seconds, up to 3 hours. Sets the timer; Start runs it.
+function CustomTimer({ onSet }) {
+  const [min, setMin] = useState('');
+  const [sec, setSec] = useState('');
+  const m = min === '' ? 0 : Number(min), s = sec === '' ? 0 : Number(sec);
+  const total = m * 60 + s;
+  const valid = Number.isInteger(m) && Number.isInteger(s) && m >= 0 && s >= 0 && s < 60 && total > 0 && total <= 3 * 3600;
+  const set = (e) => { e.preventDefault(); if (valid) { onSet(total); setMin(''); setSec(''); } };
+  return (
+    <form className="custom-timer" onSubmit={set}>
+      <label>
+        <input inputMode="numeric" type="number" min="0" max="180" step="1" value={min} onChange={(e) => setMin(e.target.value)} aria-label="Custom timer minutes" placeholder="0" />
+        <span>min</span>
+      </label>
+      <label>
+        <input inputMode="numeric" type="number" min="0" max="59" step="1" value={sec} onChange={(e) => setSec(e.target.value)} aria-label="Custom timer seconds" placeholder="0" />
+        <span>s</span>
+      </label>
+      <button className="big" disabled={!valid}>Set</button>
+    </form>
+  );
+}
+
+// Sets every total back to 0 (for example after the dry run). Nothing is deleted: each score gets a void entry,
+// so history still shows what was there. There is no undo, hence the typed confirmation.
+function ResetScores({ send }) {
+  const [open, setOpen] = useState(false);
+  const [word, setWord] = useState('');
+  const [result, setResult] = useState('');
+  const reset = (e) => {
+    e.preventDefault();
+    if (word !== 'RESET') return;
+    setResult('Resetting…');
+    send('scores:reset', { confirm: 'RESET' }, (res) => {
+      setResult(res?.ok ? `Done. ${res.voided} ${res.voided === 1 ? 'entry' : 'entries'} voided; every total is 0.` : 'Not reset. Try again.');
+      setOpen(false); setWord('');
+    });
+  };
+  return (
+    <>
+      <p className="hint">Sets every chamber back to 0 and clears tie picks and the podium. History keeps every old entry, marked voided. It cannot be undone.</p>
+      {!open ? <button className="big" onClick={() => { setOpen(true); setResult(''); }}>Reset all scores…</button> : (
+        <form className="reset-confirm" onSubmit={reset}>
+          <label htmlFor="reset-word">Type <strong>RESET</strong> to confirm</label>
+          <input id="reset-word" value={word} onChange={(e) => setWord(e.target.value)} autoComplete="off" autoCapitalize="characters" />
+          <div className="btn-row">
+            <button className="big danger-btn" disabled={word !== 'RESET'}>Reset all scores</button>
+            <button type="button" className="big" onClick={() => { setOpen(false); setWord(''); }}>Cancel</button>
+          </div>
+        </form>
+      )}
+      {result && <p className="ok" role="status">{result}</p>}
+    </>
   );
 }
 

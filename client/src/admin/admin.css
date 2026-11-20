@@ -63,3 +63,17 @@ button.big:disabled::before { opacity: 0.4; }
   .name-status { grid-column: 2 / -1; }
   .name-status:empty { display: none; }
 }
+
+/* Reset scores: the one destructive control, set apart in red. */
+.box.danger { border: 2px solid var(--error); }
+.reset-confirm { display: grid; gap: 0.6rem; }
+.reset-confirm input { min-height: 48px; max-width: 20rem; padding: 0 0.75rem; font: inherit; letter-spacing: 0.08em; background: #050829; color: var(--cream); border: 2px solid var(--line); border-radius: 12px; }
+.reset-confirm input:focus-visible { outline: none; border-color: var(--cream); }
+button.big.danger-btn:not(:disabled) { background: var(--error); border-color: var(--error); color: #fff; }
+
+/* Custom timer: minutes and seconds boxes, then Set. Wraps under the presets on a phone. */
+.custom-timer { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.custom-timer label { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--muted); }
+.custom-timer input { width: 5.5rem; min-height: 48px; padding: 0 0.6rem; font: inherit; font-size: 1.2rem; font-variant-numeric: tabular-nums; text-align: right;
+  background: #050829; color: var(--cream); border: 2px solid var(--line); border-radius: 12px; }
+.custom-timer input:focus-visible { outline: none; border-color: var(--cream); }
