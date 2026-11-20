@@ -10,8 +10,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const cleanup = [];
 afterEach(async () => { while (cleanup.length) await cleanup.pop()(); });
 
-async function start(dbPath, chambersFile) {
-  const sb = createScoreboard({ root, dbPath, adminPin: '4321', chambersFile });
+async function start(dbPath, chambersFile, customRoot = root) {
+  const sb = createScoreboard({ root: customRoot, dbPath, adminPin: '4321', chambersFile });
   const port = await sb.listen(0, '127.0.0.1');
   cleanup.push(() => sb.close());
   return { sb, url: `http://127.0.0.1:${port}` };
@@ -236,5 +236,75 @@ describe('socket sync', () => {
     // Files that exist get a URL the server really serves; a missing one is a 404, not the app page.
     const miss = await fetch(`${url}/chamber-assets/c99/song.mp3`);
     expect(miss.status).toBe(404);
+  });
+
+  it('sfx volume and mute are admin only, clamped 0..1, and survive a restart', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-'));
+    cleanup.push(async () => fs.rmSync(dir, { recursive: true, force: true }));
+    const file = path.join(dir, 's.sqlite');
+    const first = await start(file);
+    const admin = await client(first.url), other = await client(first.url);
+    expect(admin.snap.state.sfxVolume).toBe(0.8);
+    expect(admin.snap.state.sfxMuted).toBe(false);
+
+    expect((await ack(other.s, 'sfx:set', { volume: 0.2 })).denied).toBe(true);
+    await login(admin.s);
+    const seen = nextState(other.s);
+    await ack(admin.s, 'sfx:set', { volume: -2, muted: true });
+    const st = (await seen).state;
+    expect(st.sfxVolume).toBe(0);
+    expect(st.sfxMuted).toBe(true);
+
+    admin.s.close();
+    await first.sb.close();
+    cleanup.pop();
+    const second = await start(file);
+    const c = await client(second.url);
+    expect(c.snap.state.sfxVolume).toBe(0);
+    expect(c.snap.state.sfxMuted).toBe(true);
+  });
+
+  it('admin imports and removes chamber songs and custom SFX, broadcasting and serving them live', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-root-'));
+    cleanup.push(async () => fs.rmSync(dir, { recursive: true, force: true }));
+    fs.mkdirSync(path.join(dir, 'data'), { recursive: true });
+    fs.mkdirSync(path.join(dir, 'shared'), { recursive: true });
+    fs.copyFileSync(path.join(root, 'data/chambers.csv'), path.join(dir, 'data/chambers.csv'));
+    for (const f of ['scoring.json', 'effects.json', 'settings.json']) {
+      fs.copyFileSync(path.join(root, 'shared', f), path.join(dir, 'shared', f));
+    }
+
+    const { url } = await start(path.join(dir, 's.sqlite'), undefined, dir);
+    const admin = await client(url), proj = await client(url);
+    proj.s.emit('hello', { role: 'projector', device: 'P1', unsent: 0 });
+    await new Promise((r) => setTimeout(r, 30));
+
+    expect((await ack(proj.s, 'chamber:song', { id: 'c01', filename: 'a.mp3', data: Buffer.from('x') })).denied).toBe(true);
+    expect((await ack(proj.s, 'sfx:upload', { cue: 'scoreUp', filename: 'a.mp3', data: Buffer.from('x') })).denied).toBe(true);
+
+    await login(admin.s);
+    const chambersPush = new Promise((r) => proj.s.once('chambers', r));
+    const songRes = await ack(admin.s, 'chamber:song', { id: 'c01', filename: 'anthem.ogg', data: Buffer.from('ogg-song') });
+    expect(songRes.ok).toBe(true);
+    const updatedChambers = await chambersPush;
+    expect(updatedChambers.find((c) => c.id === 'c01').songUrl).toBe('/chamber-assets/c01/song.ogg');
+    expect(await (await fetch(`${url}/chamber-assets/c01/song.ogg`)).text()).toBe('ogg-song');
+
+    const sfxPush = new Promise((r) => proj.s.once('sfx', r));
+    expect((await ack(admin.s, 'sfx:upload', { cue: 'scoreUp', filename: 'chime.wav', data: Buffer.from('wav-sfx') })).ok).toBe(true);
+    expect((await sfxPush).scoreUp.url).toBe('/sfx-assets/scoreUp.wav');
+    expect(await (await fetch(`${url}/sfx-assets/scoreUp.wav`)).text()).toBe('wav-sfx');
+
+    const previewed = new Promise((r) => proj.s.once('sfx:preview', r));
+    expect((await ack(admin.s, 'sfx:preview', { cue: 'scoreUp' })).ok).toBe(true);
+    expect(await previewed).toEqual({ cue: 'scoreUp' });
+
+    const sfxCleared = new Promise((r) => proj.s.once('sfx', r));
+    expect((await ack(admin.s, 'sfx:clear', { cue: 'scoreUp' })).ok).toBe(true);
+    expect((await sfxCleared).scoreUp).toBe(null);
+
+    const songCleared = new Promise((r) => proj.s.once('chambers', r));
+    expect((await ack(admin.s, 'chamber:songClear', { id: 'c01' })).ok).toBe(true);
+    expect((await songCleared).find((c) => c.id === 'c01').songUrl).toBe(null);
   });
 });

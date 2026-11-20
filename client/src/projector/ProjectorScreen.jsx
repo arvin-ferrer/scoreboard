@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useScoreboard } from '../useScoreboard.js';
 import { useNow } from '../useNow.js';
 import { formatClock, timerLeftMs, timerStatus } from '../../../shared/timer.js';
 import { fmtPoints } from '../settings.js';
 import ChamberLogo from '../ChamberLogo.jsx';
 import ProjectorMusic from './ProjectorMusic.jsx';
+import { createSfxPlayer } from './sfxPlayer.js';
 import { useFx } from './effects/useFx.js';
 import FxCanvas from './effects/FxCanvas.jsx';
 import FullscreenFx from './effects/FullscreenFx.jsx';
@@ -39,15 +40,48 @@ const TOP_HEIGHTS = [1.4, 1.25, 1.15];
 const DIVIDER_GAP = 0.25;
 const EXTRA = TOP_HEIGHTS.reduce((s, h) => s + h - 1, 0) + DIVIDER_GAP;
 
+// Syncs projector SFX state/files and triggers countdown cues on running second changes.
+function useProjectorSfx(data, now) {
+  const sfx = useRef(null);
+  const lastSec = useRef(null);
+  if (!sfx.current) sfx.current = createSfxPlayer();
+  useEffect(() => () => sfx.current.dispose(), []);
+  useEffect(() => { sfx.current.updateList(data?.sfx); }, [data?.sfx]);
+  useEffect(() => {
+    const st = data?.state;
+    if (st) sfx.current.setVolume(st.sfxVolume, st.sfxMuted);
+  }, [data?.state?.sfxVolume, data?.state?.sfxMuted]);
+
+  const t = data?.state?.timer;
+  const status = t ? timerStatus(t) : 'stopped';
+  const left = t ? timerLeftMs(t, now) : 0;
+  const sec = status === 'running' ? Math.ceil(left / 1000) : null;
+  useEffect(() => {
+    const prev = lastSec.current;
+    lastSec.current = sec;
+    if (sec === null) return;
+    if (sec === 0 && prev !== null && prev > 0) sfx.current.play('timerDone');
+    else if (sec > 0 && sec <= 10 && sec !== prev) sfx.current.play('timerTick');
+  }, [sec]);
+
+  return {
+    play: useCallback((cue) => sfx.current.play(cue), []),
+    unlock: useCallback(() => sfx.current.unlock(), []),
+  };
+}
+
 // Read-only big-screen leaderboard. Rows slide to their new rank when scores change.
 // Visual effects (src/projector/effects) are display only and are set off by live entries, the timer and round changes.
 export default function ProjectorScreen() {
   const liveRef = useRef(() => {});
+  const sfxRef = useRef(() => {});
   const particles = useRef(null);
   const { data, settings, hostNow } = useScoreboard({ role: 'projector', onLive: (...args) => liveRef.current(...args) });
-  const fx = useFx(data, particles);
-  liveRef.current = fx.onLive;
   const now = useNow(hostNow);
+  const sfx = useProjectorSfx(data, now);
+  sfxRef.current = sfx.play;
+  const fx = useFx(data, particles, (...args) => sfxRef.current(...args));
+  liveRef.current = fx.onLive;
   const portrait = usePortrait();
   if (!data) return <p className="connecting">Connecting…</p>;
 
@@ -92,7 +126,7 @@ export default function ProjectorScreen() {
     <div className={`projector ${fx.reduced ? 'fx-reduced' : ''} ${fx.on ? '' : 'fx-off'}`}>
       <ProjectorMusic
         chambers={chambers} totals={totals} hidden={hidden} volume={state.musicVolume} muted={state.musicMuted}
-        holdSeconds={settings.musicHoldSeconds} fadeSeconds={settings.musicCrossfadeSeconds}
+        holdSeconds={settings.musicHoldSeconds} fadeSeconds={settings.musicCrossfadeSeconds} onUnlock={sfx.unlock}
       />
       <header className="proj-head">
         <img className="proj-logo" src={logoUrl} alt="Get One Fourth: Reprise" />

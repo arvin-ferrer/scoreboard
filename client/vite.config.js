@@ -17,6 +17,7 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:3000',
       '/chamber-assets': 'http://localhost:3000',
+      '/sfx-assets': 'http://localhost:3000',
       '/socket.io': { target: 'http://localhost:3000', ws: true }
     }
   }

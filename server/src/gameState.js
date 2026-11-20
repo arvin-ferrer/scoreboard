@@ -9,12 +9,20 @@ export function createGameState(log, roundIds, clock = Date.now, chamberIds = []
     scoresHidden: saved?.scoresHidden === true,
     musicVolume: Number.isFinite(saved?.musicVolume) ? Math.min(1, Math.max(0, saved.musicVolume)) : 0.7,
     musicMuted: saved?.musicMuted === true,
+    sfxVolume: Number.isFinite(saved?.sfxVolume) ? Math.min(1, Math.max(0, saved.sfxVolume)) : 0.8,
+    sfxMuted: saved?.sfxMuted === true,
     effectsOn: saved?.effectsOn !== false,
     effectsIntensity: saved?.effectsIntensity === 'reduced' ? 'reduced' : 'full',
     podiumRevealed: Number.isInteger(saved?.podiumRevealed) ? Math.min(3, Math.max(0, saved.podiumRevealed)) : 0,
     defense: saved?.defense && typeof saved.defense === 'object' ? saved.defense : {}, // defender id -> attacker ids (Andante)
   };
   const save = () => log.setState('game', state);
+  const applyAudio = (msg, volKey, muteKey) => {
+    const { volume, muted } = msg && typeof msg === 'object' ? msg : {};
+    if (typeof volume === 'number' && Number.isFinite(volume)) state[volKey] = Math.min(1, Math.max(0, volume));
+    if (typeof muted === 'boolean') state[muteKey] = muted;
+    save();
+  };
 
   return {
     get: () => ({ ...state, hostNow: clock() }),
@@ -67,10 +75,10 @@ export function createGameState(log, roundIds, clock = Date.now, chamberIds = []
     },
     // Only the fields given are changed. Volume is kept between 0 and 1.
     setMusic(msg) {
-      const { volume, muted } = msg && typeof msg === 'object' ? msg : {};
-      if (typeof volume === 'number' && Number.isFinite(volume)) state.musicVolume = Math.min(1, Math.max(0, volume));
-      if (typeof muted === 'boolean') state.musicMuted = muted;
-      save();
+      applyAudio(msg, 'musicVolume', 'musicMuted');
+    },
+    setSfx(msg) {
+      applyAudio(msg, 'sfxVolume', 'sfxMuted');
     },
     // Projector effects: master switch and Full/Reduced. Only the fields given are changed.
     setEffects(msg) {

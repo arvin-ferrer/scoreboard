@@ -2,23 +2,30 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import defaults from '../../../../shared/effects.json';
 import { createEffectsEngine, mergeEffects, streakTier } from '../../../../shared/effects.js';
 import { createFxQueue } from '../../../../shared/fxQueue.js';
+import { pickEntrySfx } from '../../../../shared/sfx.js';
 
 const PRIORITY = { curtains: 3, word: 2, spot: 1 };
 const PREVIEW_MS = 6000;
+
+const PREVIEW_SFX = {
+  popUp: 'scoreUp', popDown: 'scoreDown', shake: 'scoreDown', overtake: 'overtake',
+  newLeader: 'newLeader', fortissimo: 'wordFlash', crescendo: 'wordFlash',
+  encore: 'wordFlash', daCapo: 'wordFlash', finalTen: 'timerTick',
+};
 
 // The projector's effects controller. It hears live events from useScoreboard, asks the engine what to
 // play, runs full-screen effects one at a time through a queue, and hands the screen what to draw.
 //   - Only live events play. A snapshot (start, reconnect) only teaches the engine the log, quietly.
 //   - While scores are hidden nothing that shows scores or ranks plays.
 //   - The admin's master switch and Full/Reduced come from the shared game state.
-export function useFx(data, particlesRef) {
+export function useFx(data, particlesRef, playSfx = null) {
   const config = useMemo(() => mergeEffects(defaults, data?.effects), [data?.effects]);
   const state = data?.state;
   const on = state?.effectsOn !== false;
   const reduced = state?.effectsIntensity === 'reduced';
   const hidden = state?.scoresHidden === true;
   const latest = useRef({});
-  latest.current = { config, data, on, reduced, hidden };
+  latest.current = { config, data, on, reduced, hidden, playSfx };
 
   const engine = useRef(null);
   const queue = useRef(createFxQueue(config.queue));
@@ -75,10 +82,11 @@ export function useFx(data, particlesRef) {
   };
 
   const podiumStep = useCallback((step) => {
-    const { config: cfg, reduced: red } = latest.current;
+    const { config: cfg, reduced: red, playSfx: sfx } = latest.current;
     const place = 4 - step; // step 1 = 3rd, 2 = 2nd, 3 = 1st
     setFresh((f) => [...f, place]);
     later(() => setFresh((f) => f.filter((p) => p !== place)), 2600);
+    sfx?.(step === 3 ? 'podiumFirst' : 'podium');
     if (step === 3) {
       const n = Math.round(cfg.effects.podium.confettiParticles * (red ? cfg.reduced.particleScale : 1));
       particlesRef.current?.rain({ count: n });
@@ -110,8 +118,9 @@ export function useFx(data, particlesRef) {
   }, [enqueue, later, pulse, particlesRef]);
 
   const runPreview = useCallback((name, chamber) => {
-    const { config: cfg, data: d } = latest.current;
+    const { config: cfg, data: d, playSfx: sfx } = latest.current;
     const c = cfg.effects;
+    if (PREVIEW_SFX[name]) sfx?.(PREVIEW_SFX[name]);
     const hold = (key, value) => {
       setPreview((p) => ({ ...p, [key]: typeof value === 'object' && value !== null ? { ...p[key], ...value } : value }));
       later(() => setPreview((p) => ({ ...p, [key]: key === 'timer' || key === 'podium' ? null : {} })), PREVIEW_MS);
@@ -131,6 +140,7 @@ export function useFx(data, particlesRef) {
       case 'finalMinute': return hold('timer', 'mid');
       case 'finalTen': return hold('timer', 'fast');
       case 'curtains': {
+        sfx?.('curtains');
         const total = c.curtains.closeMs + c.curtains.holdMs + c.curtains.openMs;
         return enqueue({ type: 'curtains', ms: total, keep: true, round: d?.state.round, preview: true });
       }
@@ -163,10 +173,13 @@ export function useFx(data, particlesRef) {
       setAnimateTotals(true);
       later(() => setAnimateTotals(false), 1200);
       fxList.forEach((f) => play(f));
+      const cue = pickEntrySfx(fxList);
+      if (cue) L.playSfx?.(cue);
     } else if (kind === 'state') {
       if (!L.on) return;
       const c = L.config.effects;
       if (a.round !== b.round && c.curtains.enabled) {
+        L.playSfx?.('curtains');
         setRoundHold((h) => h ?? b.round); // keep showing the old round until the curtains close
         enqueue({ type: 'curtains', ms: c.curtains.closeMs + c.curtains.holdMs + c.curtains.openMs, keep: true, round: a.round });
         later(() => setRoundHold(null), 30_000); // safety: never stuck on the old round
@@ -174,6 +187,8 @@ export function useFx(data, particlesRef) {
       if (a.podiumRevealed > b.podiumRevealed && !a.scoresHidden && c.podium.enabled) podiumStep(a.podiumRevealed);
     } else if (kind === 'preview') {
       runPreview(a.name, a.chamber);
+    } else if (kind === 'sfxPreview') {
+      L.playSfx?.(a.cue);
     }
   }, [enqueue, later, play, podiumStep, runPreview]);
 

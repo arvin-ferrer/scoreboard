@@ -58,7 +58,9 @@ export function useScoreboard({ role = 'scorer', pin = null, onLive = null } = {
       setData((d) => d && { ...d, ...u });
     });
     s.on('chambers', (chambers) => setData((d) => d && { ...d, chambers }));
+    s.on('sfx', (sfx) => setData((d) => d && { ...d, sfx }));
     s.on('effects:preview', (m) => live_.current?.('preview', m));
+    s.on('sfx:preview', (m) => live_.current?.('sfxPreview', m));
     s.on('laptops', setLaptops);
     return () => { clearTimeout(retry.current); s.close(); };
   }, []);

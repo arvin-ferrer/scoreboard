@@ -6,8 +6,10 @@ import { Server } from 'socket.io';
 import { openScoreLog } from './scoreLog.js';
 import { createGameState } from './gameState.js';
 import { loadChambers, saveChambers, validName, withAssetUrls, CHAMBER_ASSET_DIR } from './chambers.js';
+import { SFX_ASSET_DIR, clearAudioPrefix, listSfx, saveUploadedAudio } from './audioAssets.js';
 import { rank } from '../../shared/ranking.js';
 import { PREVIEW_IDS } from '../../shared/effects.js';
+import { SFX_CUE_IDS } from '../../shared/sfx.js';
 
 // Builds the whole server. Tests call this with a temp db path and port 0.
 export function createScoreboard({ root, dbPath, clock = Date.now, adminPin, chambersFile = path.join(root, 'data/chambers.csv') }) {
@@ -32,11 +34,13 @@ export function createScoreboard({ root, dbPath, clock = Date.now, adminPin, cha
 
   const app = express();
   const server = http.createServer(app);
-  const io = new Server(server);
+  const io = new Server(server, { maxHttpBufferSize: 25 * 1024 * 1024 });
 
-  // Logos and songs are read from disk on every request, so adding a file needs no rebuild.
+  // Logos, songs, and custom SFX are read from disk on every request, so adding a file needs no rebuild.
   app.use('/chamber-assets', express.static(path.join(root, CHAMBER_ASSET_DIR)));
   app.use('/chamber-assets', (_req, res) => res.sendStatus(404));
+  app.use('/sfx-assets', express.static(path.join(root, SFX_ASSET_DIR)));
+  app.use('/sfx-assets', (_req, res) => res.sendStatus(404));
 
   const dist = path.join(root, 'client/dist');
   app.get('/api/health', (_req, res) => res.json({ ok: true }));
@@ -50,7 +54,7 @@ export function createScoreboard({ root, dbPath, clock = Date.now, adminPin, cha
   const totals = () => log.totals(chamberIds);
   const standings = () => rank(chamberIds, totals(), game.get().tieOrder);
   const snapshot = () => ({
-    chambers: chamberList(), scoring, settings: publicSettings, effects, totals: totals(), entries: log.entriesSince(0), state: game.get(), ...standings(),
+    chambers: chamberList(), sfx: listSfx(root), scoring, settings: publicSettings, effects, totals: totals(), entries: log.entriesSince(0), state: game.get(), ...standings(),
   });
   // After any score or state change, every client gets fresh totals, standings and state.
   const broadcastState = () =>
@@ -127,8 +131,29 @@ export function createScoreboard({ root, dbPath, clock = Date.now, adminPin, cha
     on('timer:start', (sec) => { game.startTimer(Number(sec)); broadcastState(); });
     on('timer:pause', () => { game.pauseTimer(); broadcastState(); });
     on('timer:reset', (sec) => { game.resetTimer(Number(sec)); broadcastState(); });
-    // Music volume (0 to 1) and mute. The projector plays the music; the admin only sets these.
+    // Music and SFX volume (0 to 1) and mute. The projector plays the audio; the admin only sets these.
     on('music:set', (m, ack) => { game.setMusic(m); broadcastState(); reply(ack, { ok: true }); });
+    on('sfx:set', (m, ack) => { game.setSfx(m); broadcastState(); reply(ack, { ok: true }); });
+    on('sfx:preview', (m, ack) => {
+      const cue = SFX_CUE_IDS.includes(m?.cue) ? m.cue : null;
+      if (cue) io.to('projectors').emit('sfx:preview', { cue });
+      reply(ack, { ok: Boolean(cue) });
+    });
+    on('sfx:upload', (m, ack) => {
+      const cue = SFX_CUE_IDS.includes(m?.cue) ? m.cue : null;
+      if (!cue) return reply(ack, { ok: false, error: 'Unknown SFX cue' });
+      const res = saveUploadedAudio({ dir: path.join(root, SFX_ASSET_DIR), prefix: cue, filename: m?.filename, data: m?.data });
+      if (!res.ok) return reply(ack, res);
+      io.emit('sfx', listSfx(root));
+      reply(ack, { ok: true });
+    });
+    on('sfx:clear', (m, ack) => {
+      const cue = SFX_CUE_IDS.includes(m?.cue) ? m.cue : null;
+      if (!cue) return reply(ack, { ok: false });
+      clearAudioPrefix(path.join(root, SFX_ASSET_DIR), cue);
+      io.emit('sfx', listSfx(root));
+      reply(ack, { ok: true });
+    });
     on('scores:hide', (hidden, ack) => { game.setHidden(hidden === true); broadcastState(); reply(ack, { ok: true }); });
     // Projector effects: master switch, Full/Reduced, and the test buttons.
     on('effects:set', (m, ack) => { game.setEffects(m); broadcastState(); reply(ack, { ok: true }); });
@@ -174,6 +199,28 @@ export function createScoreboard({ root, dbPath, clock = Date.now, adminPin, cha
       const before = c.name;
       c.name = m.name.trim();
       try { saveChambers(chambersFile, chambers); } catch (e) { c.name = before; console.error(`chamber rename not saved: ${e.message}`); return reply(ack, { ok: false }); }
+      io.emit('chambers', chamberList());
+      reply(ack, { ok: true });
+    });
+    // Import or clear a chamber's song. Files are stored under client/assets/chambers/<id>/song.<ext>.
+    on('chamber:song', (m, ack) => {
+      const c = chambers.find((x) => x.id === m?.id);
+      if (!c) return reply(ack, { ok: false, error: 'Unknown chamber' });
+      const dir = path.join(root, CHAMBER_ASSET_DIR, c.id);
+      const res = saveUploadedAudio({ dir, prefix: 'song', filename: m?.filename, data: m?.data });
+      if (!res.ok) return reply(ack, res);
+      const before = c.song;
+      c.song = `${CHAMBER_ASSET_DIR}/${c.id}/${res.filename}`;
+      try { saveChambers(chambersFile, chambers); } catch (e) { c.song = before; console.error(`chamber song not saved: ${e.message}`); return reply(ack, { ok: false, error: 'Failed to save CSV' }); }
+      io.emit('chambers', chamberList());
+      reply(ack, { ok: true });
+    });
+    on('chamber:songClear', (m, ack) => {
+      const c = chambers.find((x) => x.id === m?.id);
+      if (!c) return reply(ack, { ok: false });
+      clearAudioPrefix(path.join(root, CHAMBER_ASSET_DIR, c.id), 'song');
+      c.song = `${CHAMBER_ASSET_DIR}/${c.id}/song.mp3`;
+      try { saveChambers(chambersFile, chambers); } catch (e) { console.error(`chamber song clear not saved: ${e.message}`); return reply(ack, { ok: false }); }
       io.emit('chambers', chamberList());
       reply(ack, { ok: true });
     });

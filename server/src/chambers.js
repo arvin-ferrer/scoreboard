@@ -40,11 +40,17 @@ export function loadChambers(file) {
 export const CHAMBER_ASSET_DIR = 'client/assets/chambers';
 export function withAssetUrls(root, chambers) {
   const base = path.join(root, CHAMBER_ASSET_DIR);
-  const urlFor = (file) => {
-    if (!file) return null;
+  const infoFor = (file) => {
+    if (!file) return { url: null, version: null };
     const rel = path.relative(base, path.join(root, file));
-    if (rel.startsWith('..') || path.isAbsolute(rel)) return null;
-    return fs.existsSync(path.join(base, rel)) ? `/chamber-assets/${rel.split(path.sep).join('/')}` : null;
+    if (rel.startsWith('..') || path.isAbsolute(rel)) return { url: null, version: null };
+    const full = path.join(base, rel);
+    if (!fs.existsSync(full)) return { url: null, version: null };
+    return { url: `/chamber-assets/${rel.split(path.sep).join('/')}`, version: Math.trunc(fs.statSync(full).mtimeMs) };
   };
-  return chambers.map((c) => ({ ...c, logoUrl: urlFor(c.logo), songUrl: urlFor(c.song) }));
+  return chambers.map((c) => {
+    const logo = infoFor(c.logo);
+    const song = infoFor(c.song);
+    return { ...c, logoUrl: logo.url, songUrl: song.url, songVersion: song.version };
+  });
 }

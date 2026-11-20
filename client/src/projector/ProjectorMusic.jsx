@@ -4,7 +4,7 @@ import { createMusicPlayer } from './musicPlayer.js';
 
 // Plays the song of the chamber in 1st place. Renders only the "Enable sound" button.
 // The hold time uses this laptop's own clock: it is only a pause before switching songs, not a game timer.
-export default function ProjectorMusic({ chambers, totals, hidden, volume, muted, holdSeconds, fadeSeconds }) {
+export default function ProjectorMusic({ chambers, totals, hidden, volume, muted, holdSeconds, fadeSeconds, onUnlock }) {
   const [on, setOn] = useState(false);
   const player = useRef(null);
   const tracker = useRef(null);
@@ -14,11 +14,12 @@ export default function ProjectorMusic({ chambers, totals, hidden, volume, muted
   }
   useEffect(() => () => player.current.dispose(), []);
 
-  const songOf = (id) => chambers.find((c) => c.id === id)?.songUrl ?? null;
-  const songKey = chambers.map((c) => c.songUrl ?? '').join('|');
+  const songUrlOf = (c) => (c?.songUrl ? (c.songVersion ? `${c.songUrl}?v=${c.songVersion}` : c.songUrl) : null);
+  const songOf = (id) => songUrlOf(chambers.find((c) => c.id === id));
+  const songKey = chambers.map((c) => songUrlOf(c) ?? '').join('|');
   const ids = chambers.map((c) => c.id);
 
-  useEffect(() => { player.current.preload(chambers.map((c) => c.songUrl).filter(Boolean)); }, [songKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { player.current.preload(chambers.map(songUrlOf).filter(Boolean)); }, [songKey]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { player.current.configure({ fadeSeconds }); }, [fadeSeconds]);
   useEffect(() => { player.current.setVolume(volume, muted); }, [volume, muted]);
 
@@ -34,7 +35,7 @@ export default function ProjectorMusic({ chambers, totals, hidden, volume, muted
 
   if (on) return null;
   return (
-    <button className="enable-sound" onClick={() => { player.current.unlock(); setOn(true); }}>
+    <button className="enable-sound" onClick={() => { player.current.unlock(); onUnlock?.(); setOn(true); }}>
       Enable sound
     </button>
   );

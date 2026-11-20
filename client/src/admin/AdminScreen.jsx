@@ -4,6 +4,7 @@ import { useNow } from '../useNow.js';
 import { formatClock, timerLeftMs, timerStatus } from '../../../shared/timer.js';
 import HistoryTable from '../history/HistoryTable.jsx';
 import { PREVIEW_EFFECTS } from '../../../shared/effects.js';
+import { AUDIO_EXTS, MAX_AUDIO_BYTES, SFX_CUES } from '../../../shared/sfx.js';
 import './admin.css';
 
 const PIN_KEY = 'gof-admin-pin';
@@ -100,7 +101,14 @@ function Controls({ sb }) {
 
         <section className="box">
           <h2>Music on the projector</h2>
-          <MusicControls state={state} send={send} />
+          <AudioVolumeControls volume={state.musicVolume} muted={state.musicMuted} event="music:set"
+            hint='On the projector laptop, click "Enable sound" once. Music stops while scores are hidden.' send={send} />
+        </section>
+
+        <section className="box">
+          <h2>SFX on the projector</h2>
+          <AudioVolumeControls volume={state.sfxVolume ?? 0.8} muted={state.sfxMuted === true} event="sfx:set"
+            hint="Controls score, overtake, podium, and timer sound effects independently of chamber music." send={send} />
         </section>
 
         <section className="box">
@@ -155,6 +163,18 @@ function Controls({ sb }) {
           <h2>Chamber names</h2>
           <p className="hint">Saved to data/chambers.csv and shown on every screen right away. Scores stay with the chamber.</p>
           <ChamberNames chambers={chambers} send={send} />
+        </section>
+
+        <section className="box wide">
+          <h2>Chamber music</h2>
+          <p className="hint">Import a song per chamber (up to 20 MB: mp3, wav, ogg, m4a, aac, flac, webm). Saved to disk and pushed to the projector right away.</p>
+          <ChamberSongs chambers={chambers} send={send} />
+        </section>
+
+        <section className="box wide">
+          <h2>Custom SFX</h2>
+          <p className="hint">Upload custom audio for any cue (overrides the built-in synth sound). Remove a file to switch back to built-in.</p>
+          <SfxFiles sfx={data.sfx ?? {}} send={send} />
         </section>
 
         {missing.length > 0 && (
@@ -311,15 +331,16 @@ function NameRow({ chamber, send }) {
   );
 }
 
-// Volume and mute for the projector's music. The projector laptop does the playing.
-function MusicControls({ state, send }) {
-  const [volume, setVolume] = useState(state.musicVolume);
+// Shared volume and mute controls for projector music and SFX.
+function AudioVolumeControls({ volume: serverVolume, muted, event, hint, send }) {
+  const [volume, setVolume] = useState(serverVolume);
   const wait = useRef(null);
+  useEffect(() => { setVolume(serverVolume); }, [serverVolume]);
   useEffect(() => () => clearTimeout(wait.current), []);
   const change = (v) => {
     setVolume(v);
     clearTimeout(wait.current);
-    wait.current = setTimeout(() => send('music:set', { volume: v }), 150); // not on every pixel of the drag
+    wait.current = setTimeout(() => send(event, { volume: v }), 150); // not on every pixel of the drag
   };
   return (
     <>
@@ -327,11 +348,100 @@ function MusicControls({ state, send }) {
         <span>Volume {Math.round(volume * 100)}%</span>
         <input type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => change(Number(e.target.value))} />
       </label>
-      <button className={`big ${state.musicMuted ? 'on' : ''}`} aria-pressed={state.musicMuted} onClick={() => send('music:set', { muted: !state.musicMuted })}>
-        {state.musicMuted ? 'Muted. Tap to unmute' : 'Mute'}
+      <button className={`big ${muted ? 'on' : ''}`} aria-pressed={muted} onClick={() => send(event, { muted: !muted })}>
+        {muted ? 'Muted. Tap to unmute' : 'Mute'}
       </button>
-      <p className="hint">On the projector laptop, click "Enable sound" once. Music stops while scores are hidden.</p>
+      <p className="hint">{hint}</p>
     </>
+  );
+}
+
+// Reusable audio file picker button that uploads the selected file over Socket.IO.
+function AudioUploadButton({ label, onUpload, disabled }) {
+  const inputRef = useRef(null);
+  const accept = AUDIO_EXTS.join(',');
+  const pick = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > MAX_AUDIO_BYTES) { onUpload({ error: 'Max 20 MB' }); return; }
+    const buf = await file.arrayBuffer();
+    onUpload({ filename: file.name, data: new Uint8Array(buf) });
+  };
+  return (
+    <>
+      <input ref={inputRef} type="file" accept={accept} className="sr-only" onChange={pick} />
+      <button type="button" className="big" disabled={disabled} onClick={() => inputRef.current?.click()}>{label}</button>
+    </>
+  );
+}
+
+function ChamberSongs({ chambers, send }) {
+  return <div className="names">{chambers.map((c) => <ChamberSongRow key={c.id} chamber={c} send={send} />)}</div>;
+}
+
+function ChamberSongRow({ chamber, send }) {
+  const [status, setStatus] = useState(''); // '', 'uploading', 'saved', or error text
+  const upload = ({ filename, data, error }) => {
+    if (error) { setStatus(`err:${error}`); return; }
+    setStatus('uploading');
+    send('chamber:song', { id: chamber.id, filename, data }, (res) => setStatus(res?.ok ? 'saved' : `err:${res?.error || 'Upload failed'}`));
+  };
+  const clear = () => {
+    setStatus('uploading');
+    send('chamber:songClear', { id: chamber.id }, (res) => setStatus(res?.ok ? '' : 'err:Remove failed'));
+  };
+  const current = chamber.songUrl ? chamber.songUrl.split('/').pop() : 'No song';
+  const isErr = status.startsWith('err:');
+  return (
+    <div className="audio-row">
+      <span className="audio-id">{chamber.id}</span>
+      <span className="audio-label">
+        <strong>{chamber.name}</strong>
+        <small className={chamber.songUrl ? 'ok' : 'hint'}>{current}</small>
+      </span>
+      <div className="audio-actions">
+        <AudioUploadButton label={chamber.songUrl ? 'Replace' : 'Import'} disabled={status === 'uploading'} onUpload={upload} />
+        {chamber.songUrl && <button type="button" className="big" disabled={status === 'uploading'} onClick={clear}>Remove</button>}
+      </div>
+      <span className={`name-status ${isErr ? 'bad' : 'ok'}`} role="status">
+        {status === 'uploading' ? 'Uploading…' : status === 'saved' ? 'Saved' : isErr ? status.slice(4) : ''}
+      </span>
+    </div>
+  );
+}
+
+function SfxFiles({ sfx, send }) {
+  return <div className="names">{SFX_CUES.map((cue) => <SfxRow key={cue.id} cue={cue} info={sfx[cue.id]} send={send} />)}</div>;
+}
+
+function SfxRow({ cue, info, send }) {
+  const [status, setStatus] = useState('');
+  const upload = ({ filename, data, error }) => {
+    if (error) { setStatus(`err:${error}`); return; }
+    setStatus('uploading');
+    send('sfx:upload', { cue: cue.id, filename, data }, (res) => setStatus(res?.ok ? 'saved' : `err:${res?.error || 'Upload failed'}`));
+  };
+  const clear = () => {
+    setStatus('uploading');
+    send('sfx:clear', { cue: cue.id }, (res) => setStatus(res?.ok ? '' : 'err:Remove failed'));
+  };
+  const isErr = status.startsWith('err:');
+  return (
+    <div className="audio-row">
+      <span className="audio-label sfx-label">
+        <strong>{cue.label}</strong>
+        <small className="hint">{cue.hint} · <b className={info ? 'ok' : ''}>{info ? info.url.split('/').pop() : 'Built-in synth'}</b></small>
+      </span>
+      <div className="audio-actions">
+        <button type="button" className="big" onClick={() => send('sfx:preview', { cue: cue.id })}>Test</button>
+        <AudioUploadButton label={info ? 'Replace' : 'Upload'} disabled={status === 'uploading'} onUpload={upload} />
+        {info && <button type="button" className="big" disabled={status === 'uploading'} onClick={clear}>Reset</button>}
+      </div>
+      <span className={`name-status ${isErr ? 'bad' : 'ok'}`} role="status">
+        {status === 'uploading' ? 'Uploading…' : status === 'saved' ? 'Saved' : isErr ? status.slice(4) : ''}
+      </span>
+    </div>
   );
 }
 
