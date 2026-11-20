@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useScoreboard } from '../useScoreboard.js';
 import { useNow } from '../useNow.js';
 import { formatClock, timerLeftMs, timerStatus } from '../../../shared/timer.js';
@@ -15,7 +15,22 @@ import './projector.css';
 import './effects/effects.css';
 
 // Up to 8 chambers fit in one column. More than that use two columns, so the rows stay large.
+// A portrait screen (a phone, a tablet held upright) always gets one scrolling column.
 const ROWS_PER_COLUMN = 8;
+const PORTRAIT = '(max-aspect-ratio: 4/5)';
+// Names longer than this get a second line at a smaller size instead of being cut off.
+const LONG_NAME = 16;
+
+function usePortrait() {
+  const [on, setOn] = useState(() => window.matchMedia(PORTRAIT).matches);
+  useEffect(() => {
+    const m = window.matchMedia(PORTRAIT);
+    const change = () => setOn(m.matches);
+    m.addEventListener('change', change);
+    return () => m.removeEventListener('change', change);
+  }, []);
+  return on;
+}
 
 // The top 3 rows are taller than the rest, 1st the tallest (in units of one normal row).
 // A thin divider after 3rd takes DIVIDER_GAP. EXTRA is the most space this can add to the first column,
@@ -33,6 +48,7 @@ export default function ProjectorScreen() {
   const fx = useFx(data, particles);
   liveRef.current = fx.onLive;
   const now = useNow(hostNow);
+  const portrait = usePortrait();
   if (!data) return <p className="connecting">Connecting…</p>;
 
   const { chambers, state, totals, order, ties } = data;
@@ -45,7 +61,7 @@ export default function ProjectorScreen() {
   const tied = new Set(ties.flatMap((x) => x.chambers));
   // While scores are hidden the rows stay in list order so the order gives nothing away.
   const place = (id) => (hidden ? chambers.findIndex((c) => c.id === id) : order.indexOf(id));
-  const columns = chambers.length > ROWS_PER_COLUMN ? 2 : 1;
+  const columns = !portrait && chambers.length > ROWS_PER_COLUMN ? 2 : 1;
   const rows = Math.ceil(chambers.length / columns);
 
   // Medals: only for a decided 1st, 2nd or 3rd, and never while scores are hidden. A place that is
@@ -67,6 +83,7 @@ export default function ProjectorScreen() {
   });
   const dividerY = TOP_HEIGHTS.reduce((s, h) => s + h, 0) + DIVIDER_GAP / 2;
   const roundName = (id) => data.scoring.rounds[id]?.name ?? '';
+  const nameOf = (id) => chambers.find((c) => c.id === id)?.name ?? id;
   const podiumView = fx.displayRound === fx.config.effects.podium.round || fx.podiumDemo !== null;
   const podiumSteps = fx.podiumDemo ?? (hidden ? 0 : state.podiumRevealed);
   const ms = fx.config.effects;
@@ -117,7 +134,10 @@ export default function ProjectorScreen() {
                   {tier > 0 && <span className="flames" aria-hidden="true">{Array.from({ length: 7 }, (_, k) => <i key={k} />)}</span>}
                   <span className="proj-rank">{hidden ? '' : i + 1}</span>
                   <ChamberLogo chamber={c} />
-                  <span className="proj-name">{c.name}{!hidden && tied.has(c.id) && <small>tied</small>}</span>
+                  <span className={`proj-name${c.name.length > LONG_NAME ? ' long' : ''}${state.defense?.[c.id] ? ' defending' : ''}`}>
+                    <span className="proj-title">{c.name}{!hidden && tied.has(c.id) && <small>tied</small>}</span>
+                    {state.defense?.[c.id] && <span className="proj-defend">Defending against {state.defense[c.id].map(nameOf).join(', ')}</span>}
+                  </span>
                   <span className={`proj-total ${hidden ? 'masked' : ''}`}>
                     {hidden ? '?' : <CountUp value={total} animate={fx.animateTotals} ms={ms.scorePop.countUpMs} />}
                   </span>

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useScoreboard } from '../useScoreboard.js';
 import { fmtPoints } from '../settings.js';
-import ChamberCard from './ChamberCard.jsx';
+import ChamberCard, { RecentList } from './ChamberCard.jsx';
+import { recentFor } from '../entries.js';
 import QuickButtons from './QuickButtons.jsx';
 import NumberPad from './NumberPad.jsx';
 import UndoToast from './UndoToast.jsx';
@@ -12,8 +13,14 @@ export default function ScorerScreen() {
   const { data, settings, online, unsent, live, totals, score, undo } = useScoreboard();
   const [selected, setSelected] = useState(null);
   const [toast, setToast] = useState(null); // { entryId, text }
+  const [showPad, setShowPad] = useState(false); // the custom pad stays folded until asked for, on every screen
   const timer = useRef(null);
   useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => {
+    const close = (e) => { if (e.key === 'Escape') setSelected(null); };
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, []);
 
   if (!data) return <p className="connecting">Connecting…</p>;
 
@@ -37,7 +44,7 @@ export default function ScorerScreen() {
   };
 
   return (
-    <div className={`scorer fxmode-${data.state.effectsOn === false ? 'off' : data.state.effectsIntensity ?? 'full'}`} style={{ '--btn-h': `${settings.buttonHeightPx}px`, '--cols': settings.cardColumns }}>
+    <div className={`scorer${chamber ? ' has-chamber' : ''} fxmode-${data.state.effectsOn === false ? 'off' : data.state.effectsIntensity ?? 'full'}`} style={{ '--btn-h': `${settings.buttonHeightPx}px`, '--cols': settings.cardColumns }}>
       <header className="topbar"><h1>{round.name}</h1></header>
       <OfflineBanner online={online} unsent={unsent} texts={settings.texts} />
       <main className="layout">
@@ -50,15 +57,34 @@ export default function ScorerScreen() {
             />
           ))}
         </section>
-        <section className="panel">
+        <section className="panel" aria-label="Score">
           {!canScore ? <p className="hint">{settings.texts.noScoring}</p> : (
             <>
               <div className="panel-head" style={chamber ? { '--chamber': chamber.colour } : undefined}>
                 {chamber && <div className="oval"><ChamberLogo chamber={chamber} /></div>}
-                <h2>{chamber ? chamber.name : settings.texts.pickChamber}</h2>
+                <div className="panel-title">
+                  <h2>{chamber ? chamber.name : settings.texts.pickChamber}</h2>
+                  {chamber && <span className="panel-total">{totals[chamber.id]}</span>}
+                </div>
+                {chamber && (
+                  <button className="sheet-close" aria-label="Close" onClick={() => setSelected(null)}>
+                    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
+                  </button>
+                )}
               </div>
+              {chamber && (
+                <div className="sheet-recent">
+                  <RecentList entries={recentFor(live, chamber.id, settings.recentEntries)} unsentText={settings.texts.unsent} onUndo={doUndo} />
+                </div>
+              )}
               <QuickButtons groups={round.groups} roundId={data.state.round} chamber={chamber} live={live} disabled={!chamber} onScore={doScore} />
-              <NumberPad disabled={!chamber} max={settings.customPadMaxPoints} label={settings.customLabel} onScore={doScore} />
+              <button className="pad-toggle" aria-expanded={showPad} onClick={() => setShowPad((v) => !v)}>
+                {settings.customLabel}
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </button>
+              <div className={`pad-wrap${showPad ? ' open' : ''}`}>
+                <NumberPad disabled={!chamber} max={settings.customPadMaxPoints} label={settings.customLabel} onScore={doScore} />
+              </div>
             </>
           )}
         </section>

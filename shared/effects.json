@@ -3,10 +3,10 @@
   "effects": {
     "streakFire":  { "enabled": true, "tiers": [3, 5, 7] },
     "shake":       { "enabled": true, "atOrBelow": -30, "ms": 700 },
-    "fortissimo":  { "enabled": true, "atOrAbove": 100, "word": "FORTISSIMO!" },
-    "crescendo":   { "enabled": true, "ranksClimbed": 3, "word": "CRESCENDO!" },
-    "encore":      { "enabled": true, "streak": 5, "word": "ENCORE!" },
-    "daCapo":      { "enabled": true, "word": "DA CAPO!" },
+    "fortissimo":  { "enabled": true, "atOrAbove": 100, "word": "Fortissimo!" },
+    "crescendo":   { "enabled": true, "ranksClimbed": 3, "word": "Crescendo!" },
+    "encore":      { "enabled": true, "streak": 5, "word": "Encore!" },
+    "daCapo":      { "enabled": true, "word": "Da Capo!" },
     "newLeader":   { "enabled": true, "ms": 2600 },
     "scorePop":    { "enabled": true, "ms": 1500, "countUpMs": 700 },
     "overtake":    { "enabled": true, "ms": 1100 },
@@ -15,7 +15,7 @@
     "offKey":      { "enabled": true, "below": 0 },
     "finalMinute": { "enabled": true, "underSeconds": 60, "fastUnderSeconds": 10 },
     "metronome":   { "enabled": true },
-    "curtains":    { "enabled": true, "closeMs": 900, "holdMs": 1500, "openMs": 900 },
+    "curtains":    { "enabled": true, "closeMs": 1600, "holdMs": 1500, "openMs": 2200 },
     "podium":      { "enabled": true, "round": "awarding", "stepMs": 1800, "confettiParticles": 260 }
   },
   "word": { "ms": 1900 },

@@ -1,26 +1,65 @@
 .pin-gate { min-height: 100%; display: grid; place-content: center; justify-items: center; gap: 1rem; }
 .pin-gate::before { content: ''; width: min(60vw, 420px); height: 150px; background: url('../../assets/ui/logo/logo.svg') center / contain no-repeat; }
 .pin-gate h1 { margin: 0; font-size: 3rem; }
-.pin-gate input { font: inherit; font-size: 2rem; text-align: center; width: 12rem; min-height: 56px; letter-spacing: 0.3em; background: var(--panel); color: var(--cream); border: 3px solid var(--gold); border-radius: 8px; }
+.pin-gate input { font: inherit; font-size: 2rem; text-align: center; width: 12rem; min-height: 56px; letter-spacing: 0.3em; background: var(--panel); color: var(--cream); border: 2px solid var(--gold); border-radius: 12px; box-shadow: var(--shadow); }
+.pin-gate input:focus-visible { outline: none; border-color: var(--cream); }
 .pin-wrong { color: var(--bad); max-width: 20rem; text-align: center; }
-button.big { min-height: 56px; min-width: 96px; padding: 0 1rem; font-size: 1.2rem; font-weight: 700; border-radius: 8px; border: 3px solid var(--line); background: var(--panel); color: var(--cream); }
-button.big.on { background: var(--cream); color: #14100c; border-color: var(--gold); }
-button.big.go { background: #2e9e4f; border-color: #3fbf66; color: #fff; }
-button.big:disabled { opacity: 0.35; cursor: not-allowed; }
-.admin-top nav { margin-left: auto; display: flex; gap: 1rem; }
-.admin-top a { color: var(--gold); font-weight: 600; }
+/* The registration form's pill buttons. Outline = an option; cream = the option in use;
+   yellow with the treble clef = the main action (Start, Reveal). */
+button.big { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; min-height: 56px; min-width: 96px; padding: 0 1.4rem;
+  font-size: 1.15rem; font-weight: 600; border-radius: 999px; border: 2px solid var(--line); background: transparent; color: var(--cream);
+  transition: border-color 120ms ease-out, background-color 120ms ease-out, transform 120ms ease-out; }
+button.big:not(:disabled):hover { border-color: var(--cream); }
+button.big:not(:disabled):active { transform: translateY(1px); }
+button.big.on { background: var(--cream); color: #18181b; border-color: var(--cream); box-shadow: var(--shadow); }
+button.big.go { background: var(--gold); border-color: var(--gold); color: #18181b; box-shadow: var(--shadow); }
+button.big.go::before { content: ''; width: 22px; height: 22px; flex: none; background: url('../../assets/ui/registration/g-clef-dark.svg') center / contain no-repeat; }
+button.big:disabled { background: #f7e24a1a; border-color: transparent; color: #4a5a8c; box-shadow: none; cursor: not-allowed; }
+button.big:disabled::before { opacity: 0.4; }
+.admin-top { flex-wrap: wrap; }
+.admin-top nav { margin-left: auto; display: flex; gap: 0.25rem; }
+.admin-top a { display: inline-flex; border-radius: 999px; align-items: center; min-height: 44px; padding: 0 0.6rem; color: var(--gold); font-weight: 600; text-underline-offset: 0.2em; }
 .ok { color: var(--good); font-weight: 700; } .bad { color: var(--bad); font-weight: 700; }
 .admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; padding: 1rem; }
-.box { background: var(--panel); border: 2px solid var(--line); border-top: 4px solid var(--gold); border-radius: 8px; padding: 1rem; display: grid; gap: 0.7rem; align-content: start; }
+.box { min-width: 0; grid-template-columns: minmax(0, 1fr); background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 1.25rem 1.4rem 1.4rem; box-shadow: var(--shadow); display: grid; gap: 0.8rem; align-content: start; }
 .box.wide { grid-column: 1 / -1; }
-.box h2 { margin: 0; font-size: 1.9rem; line-height: 1; }
+.box h2 { margin: 0; font-size: 2.2rem; line-height: 1; color: var(--cream); text-shadow: var(--shadow); }
 .box p { margin: 0; }
-.admin-clock { font-size: 4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.admin-clock { font-size: 4rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--gold); }
+.admin-clock.paused, .admin-clock.stopped { color: var(--cream); }
 .admin-clock.paused { opacity: 0.6; }
 .laptops { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
-.laptops li { display: flex; justify-content: space-between; gap: 1rem; }
+.laptops li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.laptops li > span:first-child { min-width: 0; }
 .volume { display: grid; gap: 0.4rem; font-size: 1.2rem; font-weight: 600; }
 .volume input { width: 100%; min-height: 48px; accent-color: var(--gold); }
-@media (max-width: 900px) { .admin-grid { grid-template-columns: 1fr; } }
+/* minmax(0, ...) lets a column shrink below its widest child (the entries table), so nothing pushes the page sideways. */
+@media (max-width: 900px) { .admin-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 759px) {
+  .admin-grid { gap: 0.75rem; padding: 0.75rem; }
+  .admin-top nav { order: 1; width: 100%; margin: 0 -0.6rem; }
+  .box h2 { font-size: 1.6rem; }
+  .admin-clock { font-size: 3.2rem; }
+  .box .btn-row > button.big { flex: 1 1 auto; min-width: 0; }
+  .defense .btn-row > span { flex-basis: 100%; }
+}
 
-.volume select { font: inherit; min-height: 48px; padding: 0 0.5rem; background: var(--panel); color: var(--cream); border: 3px solid var(--line); border-radius: 8px; }
+.volume select, .defense select { flex: 1 1 9rem; min-width: 0; font: inherit; min-height: 48px; padding: 0 0.75rem; background: #050829; color: var(--cream); border: 2px solid var(--line); border-radius: 12px; }
+.volume select:focus-visible, .defense select:focus-visible { outline: none; border-color: var(--cream); }
+.defense .btn-row { align-items: center; }
+.defense .mini { min-height: 44px; padding: 0 0.9rem; font-weight: 600; }
+
+/* Chamber names: id, field, Save, status on one line; the field takes the room. */
+.names { display: grid; gap: 0.5rem; }
+.name-row { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto 5.5rem; align-items: center; gap: 0.5rem; }
+.name-row label { color: var(--muted); font-variant-numeric: tabular-nums; }
+.name-row input { min-width: 0; min-height: 48px; padding: 0 0.75rem; font: inherit; background: #050829; color: var(--cream); border: 2px solid var(--line); border-radius: 12px; }
+.name-row input:focus-visible { outline: none; border-color: var(--cream); }
+.name-row input[aria-invalid="true"] { border-color: var(--error); }
+.name-row .big { min-height: 48px; }
+.name-status { font-size: 0.85rem; }
+@media (max-width: 599px) {
+  .name-row { grid-template-columns: 2.5rem minmax(0, 1fr) auto; }
+  .name-status { grid-column: 2 / -1; }
+  .name-status:empty { display: none; }
+}

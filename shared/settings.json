@@ -1,9 +1,9 @@
 {
-  "_note": "Scorer and admin settings. Change adminPin before the event (the server never sends it to browsers). backupDir is the folder (e.g. a USB drive such as E:\\scoreboard-backup) that gets a score-log backup and standings CSV every minute; empty means no backups. Edit here, then restart the server. Missing keys fall back to the defaults in client/src/settings.js.",
+  "_note": "Scorer and admin settings. Change adminPin before the event (the server never sends it to browsers). backupDir is the folder (e.g. a USB drive such as E:\\scoreboard-backup) that gets a score-log backup and standings CSV every minute; empty means data/backups on this laptop (set a USB drive so backups survive the laptop). Edit here, then restart the server. Missing keys fall back to the defaults in client/src/settings.js.",
   "adminPin": "1234",
   "backupDir": "",
   "backupKeep": 10,
-  "timerPresetsMinutes": [1, 5, 10, 15, 20, 30],
+  "timerPresetsMinutes": [0.5, 3, 5, 15, 40],
   "recentEntries": 3,
   "undoToastSeconds": 6,
   "cardColumns": 4,

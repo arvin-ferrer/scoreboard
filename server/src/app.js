@@ -5,13 +5,13 @@ import fs from 'node:fs';
 import { Server } from 'socket.io';
 import { openScoreLog } from './scoreLog.js';
 import { createGameState } from './gameState.js';
-import { loadChambers, withAssetUrls, CHAMBER_ASSET_DIR } from './chambers.js';
+import { loadChambers, saveChambers, validName, withAssetUrls, CHAMBER_ASSET_DIR } from './chambers.js';
 import { rank } from '../../shared/ranking.js';
 import { PREVIEW_IDS } from '../../shared/effects.js';
 
 // Builds the whole server. Tests call this with a temp db path and port 0.
-export function createScoreboard({ root, dbPath, clock = Date.now, adminPin }) {
-  const chambers = loadChambers(path.join(root, 'data/chambers.csv'));
+export function createScoreboard({ root, dbPath, clock = Date.now, adminPin, chambersFile = path.join(root, 'data/chambers.csv') }) {
+  const chambers = loadChambers(chambersFile);
   const chamberIds = chambers.map((c) => c.id);
   const chamberList = () => withAssetUrls(root, chambers);
   const scoring = JSON.parse(fs.readFileSync(path.join(root, 'shared/scoring.json'), 'utf8'));
@@ -28,7 +28,7 @@ export function createScoreboard({ root, dbPath, clock = Date.now, adminPin }) {
   const { adminPin: _hidden, backupDir: _backupDir, backupKeep: _backupKeep, ...publicSettings } = settings;
 
   const log = openScoreLog(dbPath, clock);
-  const game = createGameState(log, roundIds, clock);
+  const game = createGameState(log, roundIds, clock, chamberIds);
 
   const app = express();
   const server = http.createServer(app);
@@ -154,6 +154,19 @@ export function createScoreboard({ root, dbPath, clock = Date.now, adminPin }) {
       reply(ack, { ok: open });
     });
     on('tie:undo', () => { game.undoTiePick(); broadcastState(); });
+    // Andante: "defending against" shown on the projector. Display only; nothing is scored from it.
+    on('defense:set', (m, ack) => { const ok = game.setDefense(m?.defender, m?.attackers); if (ok) broadcastState(); reply(ack, { ok }); });
+    on('defense:clear', () => { game.clearDefense(); broadcastState(); });
+    // Rename a chamber. Scores are stored by id, so a rename never touches the score log.
+    on('chamber:rename', (m, ack) => {
+      const c = chambers.find((x) => x.id === m?.id);
+      if (!c || !validName(m?.name)) return reply(ack, { ok: false });
+      const before = c.name;
+      c.name = m.name.trim();
+      try { saveChambers(chambersFile, chambers); } catch (e) { c.name = before; console.error(`chamber rename not saved: ${e.message}`); return reply(ack, { ok: false }); }
+      io.emit('chambers', chamberList());
+      reply(ack, { ok: true });
+    });
     on('tie:clear', () => { game.clearTieOrder(); broadcastState(); });
   });
 

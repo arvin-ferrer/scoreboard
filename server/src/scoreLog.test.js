@@ -128,3 +128,22 @@ describe('timer on host time', () => {
     expect(g.get().timer).toEqual({ duration: 30, startedAt: null, pausedAt: null });
   });
 });
+
+describe('defending against (Andante)', () => {
+  it('keeps at most 2 valid attackers and clears on a round change', () => {
+    const g = createGameState(openScoreLog(':memory:'), ['andante', 'allegro'], Date.now, ['c01', 'c02', 'c03', 'c04']);
+    expect(g.setDefense('c01', ['c02', 'c03'])).toBe(true);
+    expect(g.setDefense('c01', ['c02', 'c03', 'c04'])).toBe(false); // max 2
+    expect(g.setDefense('c01', ['c01'])).toBe(false); // not itself
+    expect(g.setDefense('c01', ['c02', 'c02'])).toBe(false);
+    expect(g.setDefense('c09', ['c02'])).toBe(false); // unknown chamber
+    expect(g.get().defense).toEqual({ c01: ['c02', 'c03'] });
+    g.setDefense('c01', []);
+    expect(g.get().defense).toEqual({});
+    g.setDefense('c02', ['c04']);
+    g.setRound('andante');
+    expect(g.get().defense).toEqual({ c02: ['c04'] }); // same round: kept
+    g.setRound('allegro');
+    expect(g.get().defense).toEqual({});
+  });
+});

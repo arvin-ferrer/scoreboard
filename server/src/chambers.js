@@ -13,6 +13,21 @@ function splitCsvLine(line) {
   return out;
 }
 
+// A name the CSV can hold: 1-60 characters, no quotes or line breaks (the reader has no escaping).
+export const validName = (name) => typeof name === 'string' && /^[^"\r\n]{1,60}$/.test(name.trim());
+
+// Writes the chamber list back in the same column order. Write-then-rename, so a crash mid-save
+// leaves the old file whole instead of half a file.
+export function saveChambers(file, chambers) {
+  const cols = Object.keys(chambers[0]);
+  const cell = (v) => (/[,]/.test(String(v ?? '')) ? `"${v}"` : String(v ?? ''));
+  const text = [cols.join(','), ...chambers.map((c) => cols.map((k) => cell(c[k])).join(','))].join('\n') + '\n';
+  const tmp = `${file}.tmp`;
+  const fd = fs.openSync(tmp, 'w');
+  try { fs.writeSync(fd, text); fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
+  fs.renameSync(tmp, file);
+}
+
 export function loadChambers(file) {
   const [head, ...lines] = fs.readFileSync(file, 'utf8').split(/\r?\n/).filter((l) => l.trim());
   const cols = splitCsvLine(head);

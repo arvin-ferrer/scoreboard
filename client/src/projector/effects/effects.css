@@ -66,17 +66,17 @@
 @keyframes fx-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
 .metro { position: relative; flex: none; width: 7vh; height: 12vh; align-self: center; }
 .metro::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 52%; clip-path: polygon(24% 0, 76% 0, 100% 100%, 0 100%); background: linear-gradient(#8a622d, #3a2814); }
-.metro i { position: absolute; left: calc(50% - 0.3vh); bottom: 14%; width: 0.6vh; height: 82%; border-radius: 1vh; background: #e0bb62; transform-origin: 50% 100%;
+.metro i { position: absolute; left: calc(50% - 0.3vh); bottom: 14%; width: 0.6vh; height: 82%; border-radius: 1vh; background: #f7e24a; transform-origin: 50% 100%;
   animation: fx-metro var(--swing, 1s) ease-in-out infinite alternate; }
 .metro i::after { content: ''; position: absolute; left: -0.9vh; top: 24%; width: 2.4vh; height: 1.8vh; border-radius: 0.5vh; background: #f6edda; box-shadow: 0 0 0.5vh #000; }
 .metro.mid { --swing: 0.8s; } .metro.fast { --swing: 0.5s; }
 @keyframes fx-metro { from { transform: rotate(-26deg); } to { transform: rotate(26deg); } }
 
 /* 3. Word flash. A dark band behind the word keeps it readable over the board. */
-.fx-word-layer { display: grid; place-items: center; }
-.fx-word-band { position: absolute; left: 0; right: 0; top: 50%; height: 34vh; translate: 0 -50%; background: linear-gradient(#0000, #000b 22%, #000b 78%, #0000);
+.fx-word-layer { display: grid; place-items: center; --word: min(24vh, calc(150vw / var(--n))); } /* --n = letters: fits the width at any aspect */
+.fx-word-band { position: absolute; left: 0; right: 0; top: 50%; height: calc(var(--word) * 1.5); translate: 0 -50%; background: linear-gradient(#0000, #000b 22%, #000b 78%, #0000);
   animation: fx-fade var(--ms) ease both; }
-.fx-word { position: relative; font-family: var(--display); font-size: 25vh; line-height: 1; white-space: nowrap; color: #ffe08a;
+.fx-word { position: relative; font-family: var(--display); font-size: var(--word); line-height: 1.15; white-space: nowrap; color: #ffe08a;
   text-shadow: 0 0 1vh #000, 0 0.6vh 1.6vh #000, 0 0 5vh #e0bb62aa; animation: fx-sweep var(--ms) cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 @keyframes fx-sweep { 0% { transform: translateX(-85vw) skewX(-10deg); opacity: 0; } 22% { transform: translateX(0) skewX(0); opacity: 1; } 78% { transform: translateX(0) scale(1.04); opacity: 1; } 100% { transform: translateX(85vw) skewX(10deg); opacity: 0; } }
 @keyframes fx-fade { 0% { opacity: 0; } 14% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0; } }
@@ -86,17 +86,42 @@
 .fx-spot-beam { position: absolute; left: var(--x); top: 0; height: var(--y); width: var(--beam-w); translate: -50% 0; clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%);
   background: linear-gradient(#fff4cc55, #fff4cc00); animation: fx-fade var(--ms) ease both; }
 
-/* 10. Curtains. Both panels use the bundled curtain art; the title waits until they have closed. */
-.fx-curtain { position: absolute; top: 0; bottom: 0; width: 50.5vw; will-change: transform; }
-.fx-curtain span { position: absolute; inset: 0; background: url('../../../assets/ui/optimized/blue_curtain_1.png') center / 100% 100% no-repeat; }
-.fx-curtain.left { left: 0; animation: fx-in-left var(--close) cubic-bezier(0.4, 0, 0.2, 1) both, fx-out-left var(--open) cubic-bezier(0.6, 0, 0.8, 0.6) var(--open-at) forwards; }
-.fx-curtain.right { right: 0; animation: fx-in-right var(--close) cubic-bezier(0.4, 0, 0.2, 1) both, fx-out-right var(--open) cubic-bezier(0.6, 0, 0.8, 0.6) var(--open-at) forwards; }
-.fx-curtain.right span { transform: scaleX(-1); }
-@keyframes fx-in-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-@keyframes fx-out-left { from { transform: translateX(0); } to { transform: translateX(-100%); } }
-@keyframes fx-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
-@keyframes fx-out-right { from { transform: translateX(0); } to { transform: translateX(100%); } }
-.fx-curtain-title { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--display); font-size: 26vh; line-height: 1; color: #ffe08a;
+/* 10. Curtains, copied from the registration site's curtain call: velvet panels close in, billow, sway and part again.
+   The title waits until they have closed. */
+.fx-clip-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.fx-curtain { --overhang: 6vh; --panel-w: calc(50vw + 2px + var(--overhang)); position: absolute; top: 0; bottom: 0; width: var(--panel-w); overflow: hidden; will-change: transform;
+  animation-timing-function: cubic-bezier(0.55, 0.05, 0.22, 1), ease-in-out, cubic-bezier(0.55, 0.05, 0.22, 1), ease-in-out; }
+.fx-curtain.left { left: calc(-1 * var(--overhang)); transform-origin: left top;
+  animation-name: fx-close-left, fx-sway-left, fx-open-left, fx-sway-left; animation-duration: var(--close), var(--close), var(--open), var(--open);
+  animation-delay: 0ms, 0ms, var(--open-at), var(--open-at); animation-fill-mode: both, none, forwards, none; }
+.fx-curtain.right { right: calc(-1 * var(--overhang)); transform-origin: right top;
+  animation-name: fx-close-right, fx-sway-right, fx-open-right, fx-sway-right; animation-duration: var(--close), var(--close), var(--open), var(--open);
+  animation-delay: 0ms, 0ms, var(--open-at), var(--open-at); animation-fill-mode: both, none, forwards, none; }
+.fx-cloth { position: absolute; inset: 0; }
+.fx-curtain.right .fx-cloth { transform: scaleX(-1); }
+.fx-cloth-body, .fx-cloth-edge { position: absolute; top: 0; bottom: 0; overflow: hidden; contain: paint; }
+.fx-cloth-body { left: 0; width: 88%; }
+.fx-cloth-edge { right: 0; width: 12%; }
+.fx-cloth-tex { position: absolute; top: 0; bottom: 0; left: 0; width: var(--panel-w); background-color: #0b1436;
+  background: linear-gradient(180deg, #02051b40, transparent 30%, #02051b50), var(--velvet) center / cover; }
+.fx-cloth-edge .fx-cloth-tex { left: calc(var(--panel-w) * -0.88); }
+.fx-cloth-tex::after { content: ''; position: absolute; inset: -5% -15%; mix-blend-mode: soft-light;
+  background: linear-gradient(100deg, transparent 20%, #91a7df20 42%, #00000025 63%, transparent 80%);
+  animation: fx-fabric-light var(--close) both, fx-fabric-light var(--open) var(--open-at) both; }
+.fx-valance { position: absolute; inset: 0 0 auto; height: clamp(65px, 11vw, 135px); z-index: 1;
+  animation: fx-valance-down var(--close) ease-out both, fx-valance-up var(--open) ease-in var(--open-at) forwards; }
+.fx-valance svg { display: block; width: 100%; height: 100%; }
+@keyframes fx-close-left { from { translate: -112% 0; scale: 0.82 1; } to { translate: 0 0; scale: 1 1; } }
+@keyframes fx-close-right { from { translate: 112% 0; scale: 0.82 1; } to { translate: 0 0; scale: 1 1; } }
+@keyframes fx-open-left { from { translate: 0 0; scale: 1 1; } to { translate: -112% 0; scale: 0.82 1; } }
+@keyframes fx-open-right { from { translate: 0 0; scale: 1 1; } to { translate: 112% 0; scale: 0.82 1; } }
+@keyframes fx-sway-left { from, to { transform: skewX(0); } 20% { transform: skewX(2deg); } 46% { transform: skewX(-1.8deg); } 70% { transform: skewX(1deg); } 88% { transform: skewX(-0.5deg); } }
+@keyframes fx-sway-right { from, to { transform: skewX(0); } 20% { transform: skewX(-2deg); } 46% { transform: skewX(1.8deg); } 70% { transform: skewX(-1deg); } 88% { transform: skewX(0.5deg); } }
+@keyframes fx-fabric-light { from { transform: translateX(-10%); opacity: 0; } 25% { transform: translateX(7%); opacity: 0.7; } 55% { transform: translateX(-4%); opacity: 0.4; }
+  80% { transform: translateX(5%); opacity: 0.6; } to { transform: translateX(0); opacity: 0; } }
+@keyframes fx-valance-down { from { transform: translateY(-105%); } to { transform: translateY(0); } }
+@keyframes fx-valance-up { from { transform: translateY(0); } to { transform: translateY(-105%); } }
+.fx-curtain-title { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; font-family: var(--display); font-size: min(26vh, calc(150vw / var(--n))); line-height: 1.15; white-space: nowrap; color: #ffe08a;
   text-shadow: 0 0 1.2vh #000, 0 0.8vh 2.4vh #000; animation: fx-title-in 500ms ease var(--close) both, fx-title-out 350ms ease calc(var(--open-at) - 350ms) forwards; }
 @keyframes fx-title-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 @keyframes fx-title-out { from { opacity: 1; } to { opacity: 0; } }
@@ -105,13 +130,13 @@
 .podium { height: 100%; display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; gap: 2vw; padding: 0 2vw; }
 .pod { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 0; }
 .pod-who { min-height: 27vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 0.6vh; max-width: 100%; text-align: center; }
-.pod-who .logo { width: 13vh; height: 13vh; border-width: 0.4vh; }
+.pod-who .logo { width: min(13vh, 18vw); height: min(13vh, 18vw); border-width: 0.4vh; }
 .pod-who .logo.fallback { font-size: 7vh; }
-.pod-name { max-width: 100%; font-size: 4.6vh; font-weight: 700; line-height: 1.1; text-shadow: 0 0.3vh 1vh #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pod-total { font-size: 7.4vh; font-weight: 800; line-height: 1; color: #ffe08a; font-variant-numeric: tabular-nums; text-shadow: 0 0.3vh 1vh #000; }
+.pod-name { max-width: 100%; font-size: min(4.6vh, 3.6vw); font-weight: 700; line-height: 1.1; text-shadow: 0 0.3vh 1vh #000; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; } /* long names wrap to 2 lines */
+.pod-total { font-size: min(7.4vh, 6vw); font-weight: 800; line-height: 1; color: #ffe08a; font-variant-numeric: tabular-nums; text-shadow: 0 0.3vh 1vh #000; }
 .pod-block { width: 100%; display: grid; place-items: center; border-radius: 1vh 1vh 0 0; border: 0.5vh solid #e0bb62; border-bottom: 0;
   background: linear-gradient(#000a, #000a), url('../../../assets/ui/optimized/wooden_wall.png') center / cover; }
-.pod-block span { font-family: var(--display); font-size: 13vh; line-height: 1; color: #e0bb62; text-shadow: 0 0.4vh 1vh #000; }
+.pod-block span { font-family: var(--display); font-size: min(13vh, 12vw); line-height: 1; color: #e0bb62; text-shadow: 0 0.4vh 1vh #000; }
 .pod-1 .pod-block { height: 26vh; } .pod-2 .pod-block { height: 19vh; } .pod-3 .pod-block { height: 13vh; }
 .pod:not(.revealed) .pod-block { opacity: 0.55; }
 .pod.revealed { --glow: var(--chamber, #e0bb62); }
@@ -128,7 +153,7 @@
 .fx-reduced .flames i { animation-duration: 1.6s; }
 .fx-reduced .proj-timer.pulse-1 .proj-digits, .fx-reduced .proj-timer.pulse-2 .proj-digits { animation: fx-soft 1.4s ease-in-out infinite; }
 .fx-reduced .metro i { animation-duration: 1.2s; }
-.fx-reduced .fx-curtain.left, .fx-reduced .fx-curtain.right { transform: none; animation: fx-fade-in var(--close) ease both, fx-fade-out var(--open) ease var(--open-at) forwards; }
+.fx-reduced .fx-curtain.left, .fx-reduced .fx-curtain.right, .fx-reduced .fx-valance { transform: none; translate: none; scale: none; animation: fx-fade-in var(--close) ease both, fx-fade-out var(--open) ease var(--open-at) forwards; }
 .fx-reduced .pod.fresh .pod-who { animation: fx-fade-in 600ms ease both; }
 @keyframes fx-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 @keyframes fx-fade-in { from { opacity: 0; } to { opacity: 1; } }

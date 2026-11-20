@@ -1,6 +1,6 @@
 // Shared state: current round, timer, tie-break picks. Persisted so a restart keeps it.
 // All times are host time (ms since epoch).
-export function createGameState(log, roundIds, clock = Date.now) {
+export function createGameState(log, roundIds, clock = Date.now, chamberIds = []) {
   const saved = log.getState('game');
   const state = {
     round: roundIds.includes(saved?.round) ? saved.round : roundIds[0],
@@ -12,6 +12,7 @@ export function createGameState(log, roundIds, clock = Date.now) {
     effectsOn: saved?.effectsOn !== false,
     effectsIntensity: saved?.effectsIntensity === 'reduced' ? 'reduced' : 'full',
     podiumRevealed: Number.isInteger(saved?.podiumRevealed) ? Math.min(3, Math.max(0, saved.podiumRevealed)) : 0,
+    defense: saved?.defense && typeof saved.defense === 'object' ? saved.defense : {}, // defender id -> attacker ids (Andante)
   };
   const save = () => log.setState('game', state);
 
@@ -19,6 +20,7 @@ export function createGameState(log, roundIds, clock = Date.now) {
     get: () => ({ ...state, hostNow: clock() }),
     setRound(round) {
       if (!roundIds.includes(round)) return false;
+      if (round !== state.round) state.defense = {}; // attacks only last within a round
       state.round = round;
       save();
       return true;
@@ -83,6 +85,19 @@ export function createGameState(log, roundIds, clock = Date.now) {
       state.podiumRevealed = n;
       save();
       return true;
+    },
+    // Andante: who is attacking a chamber, at most 2 at a time. An empty list clears that chamber.
+    setDefense(defender, attackers) {
+      const ok = chamberIds.includes(defender) && Array.isArray(attackers) && attackers.length <= 2
+        && new Set(attackers).size === attackers.length && attackers.every((a) => a !== defender && chamberIds.includes(a));
+      if (!ok) return false;
+      if (attackers.length) state.defense[defender] = attackers; else delete state.defense[defender];
+      save();
+      return true;
+    },
+    clearDefense() {
+      state.defense = {};
+      save();
     },
     clearTieOrder() {
       state.tieOrder = [];

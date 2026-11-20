@@ -32,8 +32,10 @@ export function standingsCsv({ chambers, totals, order, asOf }) {
 //  so a crash or a pulled USB drive never leaves a half-written file).
 //  backup-<time>.sqlite/.csv copies are kept only when something changed, newest `keep` of them.
 // The CSV is built from the copy itself, so the two files always agree.
+// `chambers` may be a function, so a chamber renamed mid-event shows its new name in the next backup.
 export function createBackup({ log, chambers, dir, keep = 10, clock = Date.now, logger = console }) {
-  const chamberIds = chambers.map((c) => c.id);
+  const list = () => (typeof chambers === 'function' ? chambers() : chambers);
+  const chamberIds = list().map((c) => c.id);
   let running = null;
   let lastSignature = null;
   let failing = false;
@@ -52,7 +54,7 @@ export function createBackup({ log, chambers, dir, keep = 10, clock = Date.now, 
     try {
       const totals = copy.totals(chamberIds);
       const { order } = rank(chamberIds, totals, copy.getState('game')?.tieOrder ?? []);
-      csv = standingsCsv({ chambers, totals, order, asOf: new Date(now).toISOString() });
+      csv = standingsCsv({ chambers: list(), totals, order, asOf: new Date(now).toISOString() });
     } finally {
       copy.close();
     }

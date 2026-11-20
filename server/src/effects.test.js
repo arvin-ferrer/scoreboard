@@ -31,7 +31,7 @@ const login = (s) => ack(s, 'admin:login', '4321');
 describe('projector effects on the host', () => {
   it('sends the effects file in the snapshot, with the master switch on and Full intensity', async () => {
     const { snap } = await client(await start());
-    expect(snap.effects.effects.fortissimo.word).toBe('FORTISSIMO!');
+    expect(snap.effects.effects.fortissimo.word).toBe('Fortissimo!');
     expect(snap.state).toMatchObject({ effectsOn: true, effectsIntensity: 'full', podiumRevealed: 0 });
   });
 

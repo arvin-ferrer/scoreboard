@@ -67,18 +67,18 @@ The admin picks the current round, and every scorer screen switches to it. Each 
 | --- | --- |
 | Adagio | +10, +20, +30 |
 | Andante | Defense won: +10, +20, +30. Defense lost: −10, −20, −30. Pool: +5, +15, +20. |
-| Allegro | Correct: +15, +30, +60. Incorrect: −15, −30, −60. Syntax error: −5 with a counter. Power-up bonus: +10, +15, +40. Magnum Opus: +100. Special problem: +100, −50. |
+| Allegro | Correct: +15, +30, +60. Syntax error: −5 with a counter. Power-up bonus: +10, +40. Magnum Opus: +100, −50. Lifeline (special problem): +100, −50. |
 | Awarding | No scoring. The admin orders any tied chambers after Vivace and reveals the ranks. |
 
-Every scoring screen also has a custom + / − number pad for anything else, such as a Fortissimo wager or a Crescendo bonus, and an undo for the last entry.
+Every scoring screen also has a custom + / − number pad for anything else, such as a Fortissimo stake, and an undo for the last entry.
 
 ## Screens
 
 | Screen | Who | What it does |
 | --- | --- | --- |
 | Scorer | Scorers on laptops | Chamber cards with totals and the current round's buttons. Tap a chamber, tap the points. A short undo toast follows each entry, and each card shows its last few entries. |
-| Admin | Tech lead | Switch rounds, start and pause timers, undo any entry, hide or reveal scores, set tie order, control music, see connected laptops, export. PIN protected. |
-| Projector | Big screen, read-only | Themed leaderboard with animated rank changes, the round name and a big timer. |
+| Admin | Tech lead | Switch rounds, start and pause timers, undo any entry, hide or reveal scores, set tie order, set "Defending against" for Andante, control music, see connected laptops, export. PIN protected. |
+| Projector | Big screen, read-only | Themed leaderboard with animated rank changes, the round name, a big centered timer, and in Andante "Defending against" under each attacked chamber (up to 2 attackers, set by the admin, display only). |
 | History | Admin and scorers | Every entry with time, chamber, points, label and device. Filter by chamber. |
 
 ### Look and feel
@@ -90,7 +90,7 @@ The scoreboard is themed, not plain. It uses the art in `client/assets/`: backgr
 Visual effects on the projector, for show only. They never decide or track anything about the game. Every threshold, word and on/off switch is in `shared/effects.json` (restart the server after editing).
 
 - Triggers: live score entries, rank changes, the timer and round changes. A snapshot (start or reconnect) never plays effects. Undo plays no pop, word or spotlight.
-- Streak fire (3, 5, 7 positives in a row), shake and red flash (−30 or worse), word flashes (FORTISSIMO! at +100, CRESCENDO! on a 3-rank climb, ENCORE! at a streak of 5, DA CAPO! when a total climbs from below 0 to above 0), new-leader spotlight, score pop with count-up, overtake trail, gold burst (+100), note rain, off-key grey (total below 0), final-minute pulse with a metronome, round-change curtains, and the Awarding podium (3rd, 2nd, 1st on the admin's click, confetti for 1st).
+- Streak fire (3, 5, 7 positives in a row), shake and red flash (−30 or worse), word flashes (Fortissimo! at +100, Crescendo! on a 3-rank climb, Encore! at a streak of 5, Da Capo! when a total climbs from below 0 to above 0), new-leader spotlight, score pop with count-up, overtake trail, gold burst (+100), note rain, off-key grey (total below 0), final-minute pulse with a metronome, round-change curtains, and the Awarding podium (3rd, 2nd, 1st on the admin's click, confetti for 1st).
 - Word flash, curtains and spotlight go through one queue, one at a time. Row effects run together.
 - While scores are hidden, no effect that shows scores or ranks plays, and the podium cannot be revealed.
 - Admin: effects on/off, Full or Reduced, the podium reveal buttons, and an effects preview panel with one button per effect. Previews go only to projector screens and change nothing stored.

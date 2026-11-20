@@ -73,7 +73,7 @@ function Controls({ sb }) {
           <div className={`admin-clock ${status}`}>{formatClock(timerLeftMs(t, now))}</div>
           <div className="btn-row">
             {settings.timerPresetsMinutes.map((m) => (
-              <button key={m} className={`big ${t.duration === m * 60 ? 'on' : ''}`} onClick={() => send('timer:reset', m * 60)}>{m} min</button>
+              <button key={m} className={`big ${t.duration === m * 60 ? 'on' : ''}`} onClick={() => send('timer:reset', m * 60)}>{m < 1 ? `${m * 60} s` : `${m} min`}</button>
             ))}
           </div>
           <div className="btn-row">
@@ -82,6 +82,11 @@ function Controls({ sb }) {
               : <button className="big go" disabled={t.duration === 0} onClick={() => send('timer:start', t.duration)}>{status === 'paused' ? 'Resume' : 'Start'}</button>}
             <button className="big" onClick={() => send('timer:reset', t.duration)}>Reset</button>
           </div>
+        </section>
+
+        <section className="box">
+          <h2>Defending against</h2>
+          <DefenseControls state={state} chambers={chambers} name={name} send={send} />
         </section>
 
         <section className="box">
@@ -145,6 +150,12 @@ function Controls({ sb }) {
           </ul>
         </section>
 
+        <section className="box wide">
+          <h2>Chamber names</h2>
+          <p className="hint">Saved to data/chambers.csv and shown on every screen right away. Scores stay with the chamber.</p>
+          <ChamberNames chambers={chambers} send={send} />
+        </section>
+
         {missing.length > 0 && (
           <section className="box wide">
             <h2>Missing chamber files</h2>
@@ -166,6 +177,75 @@ function Controls({ sb }) {
         </section>
       </main>
     </div>
+  );
+}
+
+// Andante: which chamber is attacking which, shown on the projector. At most 2 attackers per defender.
+// Cleared automatically when the round changes.
+function DefenseControls({ state, chambers, name, send }) {
+  const [defender, setDefender] = useState('');
+  const [attacker, setAttacker] = useState('');
+  const defense = state.defense ?? {};
+  const current = defense[defender] ?? [];
+  const canAdd = defender && attacker && attacker !== defender && !current.includes(attacker) && current.length < 2;
+  const add = () => { send('defense:set', { defender, attackers: [...current, attacker] }); setAttacker(''); };
+  const pick = (value, set, blank) => (
+    <select value={value} onChange={(e) => set(e.target.value)}>
+      <option value="">{blank}</option>
+      {chambers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+    </select>
+  );
+  return (
+    <div className="defense">
+      <div className="btn-row">
+        {pick(defender, setDefender, 'Defender…')}
+        <span>defending against</span>
+        {pick(attacker, setAttacker, 'Attacker…')}
+        <button className="big" disabled={!canAdd} onClick={add}>Add</button>
+      </div>
+      {Object.keys(defense).length === 0 ? <p className="hint">Nobody is under attack.</p> : (
+        <ul className="laptops">
+          {Object.entries(defense).map(([d, attackers]) => (
+            <li key={d}>
+              <span>{name(d)} — defending against {attackers.map(name).join(', ')}</span>
+              <button className="mini" onClick={() => send('defense:set', { defender: d, attackers: [] })} aria-label={`Clear ${name(d)}`}>Clear</button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {Object.keys(defense).length > 0 && <button className="big" onClick={() => send('defense:clear')}>Clear all</button>}
+    </div>
+  );
+}
+
+// One row per chamber: type a new name, then Save (or Enter). Each row saves on its own.
+function ChamberNames({ chambers, send }) {
+  return <div className="names">{chambers.map((c) => <NameRow key={c.id} chamber={c} send={send} />)}</div>;
+}
+
+function NameRow({ chamber, send }) {
+  const [draft, setDraft] = useState(chamber.name);
+  const [status, setStatus] = useState(''); // '', 'saving', 'saved', 'failed'
+  useEffect(() => { setDraft(chamber.name); }, [chamber.name]);
+  const name = draft.trim();
+  const valid = name.length >= 1 && name.length <= 60 && !/["\r\n]/.test(name);
+  const changed = name !== chamber.name;
+  const save = (e) => {
+    e.preventDefault();
+    if (!valid || !changed) return;
+    setStatus('saving');
+    send('chamber:rename', { id: chamber.id, name }, (res) => setStatus(res?.ok ? 'saved' : 'failed'));
+  };
+  return (
+    <form className="name-row" onSubmit={save}>
+      <label htmlFor={`name-${chamber.id}`}>{chamber.id}</label>
+      <input id={`name-${chamber.id}`} value={draft} maxLength={60} autoComplete="off"
+        onChange={(e) => { setDraft(e.target.value); setStatus(''); }} aria-invalid={!valid} />
+      <button className="big" disabled={!valid || !changed || status === 'saving'}>Save</button>
+      <span className={`name-status ${status === 'failed' || !valid ? 'bad' : 'ok'}`} role="status">
+        {!valid ? (name ? 'No quotes' : 'Name needed') : status === 'saved' && !changed ? 'Saved' : status === 'failed' ? 'Not saved' : ''}
+      </span>
+    </form>
   );
 }
 

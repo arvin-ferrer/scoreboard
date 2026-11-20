@@ -72,7 +72,7 @@ Port is **3000** on the host (change with the `PORT` environment variable only i
   ================================================================
   ```
 
-  The hotspot address (`192.168.137.x`) is listed first when there is more than one. `0 entries replayed` confirms the log is fresh. If you see `WARNING: no backup folder set`, stop (close the window), fix `backupDir`, start again.
+  The hotspot address (`192.168.137.x`) is listed first when there is more than one. `0 entries replayed` confirms the log is fresh. If you see `WARNING: backups are on this laptop only`, stop (close the window), set `backupDir` to the USB drive, start again.
 - [ ] Leave this window open all day. Closing it stops the scoreboard. If the server crashes, the window prints `Server stopped (exit code …). Restarting in 2 s` and restarts by itself. Scores are kept.
 - [ ] Check the USB drive: `scores-latest.sqlite` and `standings-latest.csv` appeared within a minute, plus a `backup-<date>-<time>` pair.
 
@@ -114,7 +114,7 @@ Port is **3000** on the host (change with the `PORT` environment variable only i
 
 ### Adagio, Andante, Allegro
 
-Scorers use the quick buttons; see the [Scorer guide](scorer-guide.md). Anything without a button (Fortissimo wager, Crescendo bonus) goes through the **Custom** pad.
+Scorers use the quick buttons; see the [Scorer guide](scorer-guide.md). Anything without a button (the Fortissimo stake) goes through the **Custom** pad.
 
 ### Vivace (tiebreak)
 

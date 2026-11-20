@@ -4,6 +4,7 @@ import Database from 'better-sqlite3';
 // A void is a new row (points 0) whose `voids` points at the entry it cancels.
 export function openScoreLog(dbPath = ':memory:', clock = Date.now) {
   const db = new Database(dbPath);
+  db.pragma('synchronous = FULL'); // each entry is on disk before the host answers, so a power cut loses nothing acknowledged
   db.exec(`
     CREATE TABLE IF NOT EXISTS entries (
       seq INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -12,15 +12,22 @@ export default function ChamberCard({ chamber, total, medal = 0, live, selected,
         {medal > 0 && <span className={`card-medal medal-${medal}`} aria-label={`Place ${medal}`}>{medal}</span>}
         <span className="card-total">{total}</span>
       </button>
-      <ul className="recent">
-        {recent.map((e) => (
-          <li key={e.id} className={e.pending ? 'pending' : ''}>
-            <span className={e.points < 0 ? 'neg' : 'pos'}>{fmtPoints(e.points)}</span>
-            <span className="why">{e.label}{e.pending ? ` (${unsentText})` : ''}</span>
-            <button className="mini" onClick={() => onUndo(e.id)} aria-label={`Undo ${fmtPoints(e.points)}`}>Undo</button>
-          </li>
-        ))}
-      </ul>
+      <RecentList entries={recent} unsentText={unsentText} onUndo={onUndo} />
     </div>
+  );
+}
+
+// A chamber's latest entries with an Undo each. Also shown in the phone's scoring sheet.
+export function RecentList({ entries, unsentText, onUndo }) {
+  return (
+    <ul className="recent">
+      {entries.map((e) => (
+        <li key={e.id} className={e.pending ? 'pending' : ''}>
+          <span className={e.points < 0 ? 'neg' : 'pos'}>{fmtPoints(e.points)}</span>
+          <span className="why">{e.label}{e.pending ? ` (${unsentText})` : ''}</span>
+          <button className="mini" onClick={() => onUndo(e.id)} aria-label={`Undo ${fmtPoints(e.points)}`}>Undo</button>
+        </li>
+      ))}
+    </ul>
   );
 }

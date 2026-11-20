@@ -44,7 +44,7 @@ Current values (verified against the file):
 | --- | --- |
 | adagio (Adagio) | Correct 10, 20, 30 |
 | andante (Andante) | Defense won 10, 20, 30 · Defense lost −10, −20, −30 · Pool 5, 15, 20 |
-| allegro (Allegro) | Correct 15, 30, 60 · Incorrect −15, −30, −60 · Syntax error −5 (counter) · Power-up bonus 10, 15, 40 · Magnum Opus 100 · Special problem 100, −50 |
+| allegro (Allegro) | Correct 15, 30, 60 · Syntax error −5 (counter) · Power-up bonus 10, 40 · Magnum Opus 100, −50 · Lifeline 100, −50 |
 | vivace (Vivace) | none, `tiebreak: true` |
 | awarding (Awarding) | none |
 
@@ -63,7 +63,7 @@ Current values (verified against the file):
   "adminPin": "<choose your own>",
   "backupDir": "E:\\scoreboard-backup",
   "backupKeep": 10,
-  "timerPresetsMinutes": [1, 5, 10, 15, 20, 30],
+  "timerPresetsMinutes": [0.5, 3, 5, 15, 40],
   "recentEntries": 3,
   "undoToastSeconds": 6,
   "cardColumns": 4,
@@ -82,14 +82,14 @@ Server-only keys (never sent to browsers):
 | Key | Type | Default | Effect |
 | --- | --- | --- | --- |
 | `adminPin` | string | a committed placeholder, see [Admin PIN](#admin-pin) | The PIN for `/admin`. Compared as an exact string. Empty string = nobody can log in. |
-| `backupDir` | string | `""` (no backups) | Folder for the minute backups. Absolute Windows path recommended, with doubled backslashes in JSON. A relative path is resolved from the scoreboard folder. Empty = no backups and a `WARNING` at start. |
+| `backupDir` | string | `""` (= `data/backups` on this laptop) | Folder for the minute backups. Absolute Windows path recommended, with doubled backslashes in JSON. A relative path is resolved from the scoreboard folder. Empty = backups go to `data/backups` on the host laptop, with a `WARNING` at start, because they die with the laptop. Point it at a USB drive. |
 | `backupKeep` | number | 10 | How many stamped `backup-<date>-<time>` pairs to keep. Older ones are deleted. `scores-latest.*` is always kept. |
 
 Keys sent to every screen (any missing key falls back to the default in `client/src/settings.js`):
 
 | Key | Type | Default | Effect |
 | --- | --- | --- | --- |
-| `timerPresetsMinutes` | number array | `[1, 5, 10, 15, 20, 30]` | The admin's timer length buttons, as **N min**. |
+| `timerPresetsMinutes` | number array | `[0.5, 3, 5, 15, 40]` | The admin's timer length buttons, as **N min** (under 1 shows as seconds, e.g. **30 s**). |
 | `recentEntries` | number | 3 | How many of its latest entries each scorer card lists (each with an Undo). |
 | `undoToastSeconds` | number | 6 | How long the **+20 to Chamber 1 / Undo** message stays. |
 | `cardColumns` | number | 4 | Chamber-card columns on a wide scorer screen (3 columns under 1500 px wide, 2 under 1100 px). |
@@ -122,10 +122,10 @@ Projector effects only. Nothing here affects scores. Times are milliseconds. Eac
 | --- | --- | --- | --- |
 | `effects.streakFire.tiers` | number array | `[3, 5, 7]` | Flame sizes at this many positive entries in a row for one chamber. A negative entry or an undo of one of them ends the streak. |
 | `effects.shake.atOrBelow` / `.ms` | number | `-30` / `700` | Row shake and red flash on an entry this low or lower. Not in Reduced. |
-| `effects.fortissimo.atOrAbove` / `.word` | number / string | `100` / `FORTISSIMO!` | Word flash on an entry this high or higher. |
-| `effects.crescendo.ranksClimbed` / `.word` | number / string | `3` / `CRESCENDO!` | Word flash when one entry lifts a chamber this many places. |
-| `effects.encore.streak` / `.word` | number / string | `5` / `ENCORE!` | Word flash when a streak reaches exactly this length. |
-| `effects.daCapo.word` | string | `DA CAPO!` | Word flash when a total goes from below 0 to above 0. |
+| `effects.fortissimo.atOrAbove` / `.word` | number / string | `100` / `Fortissimo!` | Word flash on an entry this high or higher. |
+| `effects.crescendo.ranksClimbed` / `.word` | number / string | `3` / `Crescendo!` | Word flash when one entry lifts a chamber this many places. |
+| `effects.encore.streak` / `.word` | number / string | `5` / `Encore!` | Word flash when a streak reaches exactly this length. |
+| `effects.daCapo.word` | string | `Da Capo!` | Word flash when a total goes from below 0 to above 0. |
 | `effects.newLeader.ms` | number | `2600` | Spotlight on a chamber that takes 1st place outright. |
 | `effects.scorePop.ms` / `.countUpMs` | number | `1500` / `700` | Floating **+20** on the row, and the total's count-up time. |
 | `effects.overtake.ms` | number | `1100` | Trail on a row that passes another. |
@@ -134,7 +134,7 @@ Projector effects only. Nothing here affects scores. Times are milliseconds. Eac
 | `effects.offKey.below` | number | `0` | Rows with a total below this look grey. |
 | `effects.finalMinute.underSeconds` / `.fastUnderSeconds` | number | `60` / `10` | Timer pulses under a minute, faster under 10 s. |
 | `effects.metronome.enabled` | boolean | `true` | Swinging metronome next to a running timer. |
-| `effects.curtains.closeMs` / `.holdMs` / `.openMs` | number | `900` / `1500` / `900` | Curtains on a round change. |
+| `effects.curtains.closeMs` / `.holdMs` / `.openMs` | number | `1600` / `1500` / `2200` | Curtains on a round change. |
 | `effects.podium.round` | string | `awarding` | The round id during which the projector shows the podium instead of the leaderboard. |
 | `effects.podium.stepMs` / `.confettiParticles` | number | `1800` / `260` | Preview step time, and the confetti for 1st place. |
 | `word.ms` | number | `1900` | How long a word flash stays. |
@@ -153,7 +153,7 @@ c01,Chamber 1,#e63946,client/assets/chambers/c01/logo.png,client/assets/chambers
 | Column | Type | Used for |
 | --- | --- | --- |
 | `id` | short string, unique | Stored on every entry. The folder name under `client/assets/chambers/`. **Never change an id after scoring has started**: entries for an unknown id disappear from the totals. |
-| `name` | string | Shown everywhere. The fallback logo uses the trailing number of the name (`Chamber 7` → **7**), or its first letter. |
+| `name` | string, 1–60 characters, no double quotes | Shown everywhere. Easiest to change on the admin screen (**Chamber names**), which saves here and updates every screen without a restart. The fallback logo uses the trailing number of the name (`Chamber 7` → **7**), or its first letter. |
 | `colour` | CSS colour, e.g. `#e63946` | Card edge, projector row edge, fallback logo disc. |
 | `logo` | path from the scoreboard folder | PNG (or any image). Must be inside `client/assets/chambers/`. Missing file = fallback disc, listed under **Missing chamber files**. |
 | `song` | path from the scoreboard folder | MP3 (or any browser-playable audio). Must be inside `client/assets/chambers/`. Missing file = no music for that chamber. |

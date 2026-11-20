@@ -29,7 +29,7 @@ Entries are stamped with the round that was current when the scorer tapped. Swit
 
 The timer runs on the host's clock, so every screen shows the same time.
 
-1. Tap a length: **1 min**, **5 min**, **10 min**, **15 min**, **20 min**, **30 min**. (The list comes from `timerPresetsMinutes` in settings.) This sets the timer and stops it if it was running.
+1. Tap a length: **30 s** (Andante attack phase), **3 min** (strategy, Andante defense), **5 min** (Vivace), **15 min** (Adagio, Andante), **40 min** (Allegro). (The list comes from `timerPresetsMinutes` in settings.) This sets the timer and stops it if it was running.
 2. Tap **Start**. While running, the button becomes **Pause**. After a pause it becomes **Resume**.
 3. **Reset** stops the timer and puts it back to the chosen length.
 
@@ -38,6 +38,14 @@ The timer runs on the host's clock, so every screen shows the same time.
 **Tapping a length while the timer is running stops it.** To change the length mid-round, pause first, or accept the restart.
 
 On the projector, the timer turns red in the last 10 seconds and blinks at 0:00. The timer never scores anything and never ends a round by itself.
+
+## Defending against (Andante)
+
+Shows on the projector, under the attacked chamber: "Defending against Chamber 2, Chamber 3". Display only; scores still come from the scorers.
+
+1. Pick the **Defender**, then the **Attacker**, then tap **Add**. A chamber can have at most 2 attackers.
+2. When a defense ends, tap **Clear** next to that chamber. At the start of a new sequence, tap **Clear all**.
+3. Changing the round clears everything by itself.
 
 ## Scores on the projector
 
@@ -134,6 +142,9 @@ Lists every open scoreboard screen as **Scorer AB12**, **Admin 9F3K**, **Project
 A laptop with unsent entries shows **· 3 unsent** in red. That laptop is offline or was until a moment ago. If the number does not fall within a minute, go to that laptop (see [Troubleshooting](troubleshooting.md#the-offline-banner-wont-clear)).
 
 A laptop disappears from the list when its tab is closed or its connection drops.
+
+## Chamber names
+Type a new name in a chamber's box, then **Save** (or press Enter). The name changes on every screen at once and is saved to `data/chambers.csv`, so it survives a restart. Scores stay with the chamber: they are stored under its id (`c01`–`c15`), which never changes. Names are 1–60 characters, with no double quotes.
 
 ## Missing chamber files
 

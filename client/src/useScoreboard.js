@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import { withDefaults } from './settings.js';
 import { effectiveEntries, liveEntries, totalsOf } from './entries.js';
-import { deviceId, dequeue, enqueue, isFinalAnswer, loadOutbox, saveOutbox } from './outbox.js';
+import { deviceId, dequeue, enqueue, isFinalAnswer, loadOutbox, newId, saveOutbox } from './outbox.js';
 
 const store = () => { try { return window.localStorage; } catch { return { getItem: () => null, setItem() {} }; } };
 
@@ -57,6 +57,7 @@ export function useScoreboard({ role = 'scorer', pin = null, onLive = null } = {
       if (prev) live_.current?.('state', u.state, prev);
       setData((d) => d && { ...d, ...u });
     });
+    s.on('chambers', (chambers) => setData((d) => d && { ...d, chambers }));
     s.on('effects:preview', (m) => live_.current?.('preview', m));
     s.on('laptops', setLaptops);
     return () => { clearTimeout(retry.current); s.close(); };
@@ -95,12 +96,12 @@ export function useScoreboard({ role = 'scorer', pin = null, onLive = null } = {
   const totals = useMemo(() => (data ? totalsOf(data.chambers.map((c) => c.id), live) : {}), [data, live]);
 
   const score = useCallback((chamber, points, label) => {
-    const id = crypto.randomUUID();
+    const id = newId();
     setOutbox((o) => enqueue(o, { kind: 'add', msg: { id, chamber, points, round: data.state.round, label, device: device.current } }));
     return id;
   }, [data]);
   const undo = useCallback((entryId) => {
-    setOutbox((o) => enqueue(o, { kind: 'void', msg: { id: crypto.randomUUID(), voids: entryId, device: device.current } }));
+    setOutbox((o) => enqueue(o, { kind: 'void', msg: { id: newId(), voids: entryId, device: device.current } }));
   }, []);
 
   return { data, settings, online, unsent: outbox.length, entries: all, live, totals, score, undo, send, hostNow, laptops, admin };

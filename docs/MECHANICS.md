@@ -1,7 +1,7 @@
 # Get One Fourth (Get ¼): The Pen and Paper Programming Challenge, Mechanics
 
 **Theme:** Reprise
-**Version:** Complete, with all committee decisions as of Nov 14, 2026
+**Version:** Complete, with all committee decisions as of Nov 17, 2026 (Decision Log numbers in brackets, e.g. DL #63)
 
 Rules marked **(tentative)** are working answers that the committee still has to confirm. Everything else is final.
 
@@ -156,8 +156,8 @@ The movement has **4 sequences**. Each sequence has two phases: an Attack Phase 
 | Hard | 7 | 60 dB |
 
 - **Correct:** the chamber gets the value of the question, minus **5 dB for each syntax error**. A question's score never goes below 0 because of syntax errors.
-- **Incorrect:** the chamber **loses** the value of the question. This includes any answer with a **semantic error**.
-- **Unanswered:** **0 dB**, with no penalty. Only incorrect answers subtract.
+- **Incorrect:** **0 dB**, with no penalty (DL #63). This includes any answer with a **semantic error**.
+- **Unanswered:** **0 dB**, with no penalty.
 
 Definitions for proctors:
 
@@ -166,26 +166,67 @@ Definitions for proctors:
 
 ### Power-ups
 
-- A chamber declares its power-up to the proctor **before** the affected question. The question is marked with the power-up's name.
-- Each power-up can be used **once**.
+- Each chamber holds **one** power-up and uses it **once**, so power-ups never stack.
+- A chamber declares its power-up to the proctor **before** answering the affected question. The question is marked with the power-up's name. A power-up can't be used after the question is answered.
+- Syntax errors come off the question's base points **before** any bonus. The base can't go below 0.
 - A discarded question can no longer be answered.
+- **No power-up applies to the Magnum Opus or the Lifeline (special problem).**
 
 | Power-up | Copies | Effect |
 | --- | --- | --- |
-| **Pianissimo** | 5 | Discard this question and gain +10 dB. |
-| **Ritardando** | 4 | After answering a Hard question correctly, gain +40 dB. A wrong answer gets no extra penalty. |
-| **Fortissimo** | 3 | Wager up to 100 dB, never more than the chamber's current total, then answer a Hard question. Correct: base score **plus** the wager. Wrong: −base **and** −wager. |
-| **Hemiola** | 2 | Once activated, and until an incorrect answer, each correct Hard answer adds +15 dB and discards one remaining Easy question, chosen by the chamber. |
-| **Crescendo** | 1 | Discard all remaining Easy and Medium questions. For every question discarded, each later correct Hard answer gets an extra +5 dB. |
+| **Pianissimo** | 5 | Discard one question of any difficulty and gain **+10 dB**. |
+| **Ritardando** | 4 | Hard only. Correct: base **+40**. Wrong: no +40, scored like any wrong answer, and the power-up is used up. |
+| **Fortissimo** | 3 | Hard only. Stake **1–100 dB**, told to the proctor before answering; the proctor writes it on the question. Correct: base **+ stake**. Wrong: **−stake only**, with no other deduction for that question. The stake may be more than the chamber's total, and the total can go below 0. |
+
+**Pianissimo cases**
+
+| Case | Result |
+| --- | --- |
+| Discards an Easy (worth 15) | +10. The Easy can't be answered anymore |
+| Discards a Medium (worth 30) | +10 |
+| Discards a Hard (worth 60) | +10 |
+| Tries to use it after answering the question | Not allowed |
+| Never uses it | Nothing happens |
+
+**Ritardando cases**
+
+| Case | Result |
+| --- | --- |
+| Hard, correct | 60 + 40 = 100 |
+| Hard, correct with 2 syntax errors | (60 − 10) + 40 = 90 |
+| Hard, correct with 12+ syntax errors | 0 + 40 = 40 |
+| Hard, wrong (semantic error) | No +40; scored like any wrong answer. The power-up is used up |
+| Declared on an Easy or Medium | Not allowed |
+
+**Fortissimo cases**
+
+| Case | Result |
+| --- | --- |
+| Stake 50, correct | 60 + 50 = +110 |
+| Stake 100, correct | 60 + 100 = +160 |
+| Stake 50, correct with 1 syntax error | (60 − 5) + 50 = +105 |
+| Stake 50, wrong | −50 only |
+| Stake 100, wrong | −100 |
+| Chamber has 30 dB, stakes 100, wrong | 30 − 100 = −70 |
+| Stake 0 or above 100 | Not allowed |
+| Declared on an Easy or Medium | Not allowed |
 
 ### Magnum Opus
 
-- After **20 minutes**, a Magnum Opus question is presented to all chambers.
-- For up to **10 minutes**, chambers may answer only the Magnum Opus, until one chamber answers it correctly.
-- The **first chamber to answer correctly** gets **+100 dB**.
+- The Magnum Opus is part of the Third Movement (Allegro) only.
+- The envelope is presented at the **10-minute mark** of Allegro (10:15) and stays open until **10:45**. There is **no Magnum-Opus-only window**: chambers keep working on their other questions (DL #76).
+- Answers are checked **correct or wrong only**, with no −5 for syntax errors. Submissions are checked in order of the proctor's written time, and checking continues after a winner is confirmed (DL #93).
+- Scoring, once per chamber (DL #75):
+  - **First correct answer:** **+100 dB**.
+  - **Correct, but not the first:** **0 dB**.
+  - **Wrong answer, or the envelope opened with nothing submitted:** **−50 dB**.
+- If nobody answers correctly, nobody gets the +100 (DL #94).
 - If two correct submissions arrive at roughly the same time, they are settled with **Bato Bato Pick**.
 
-### Special Problem
+### Lifeline (Special Problem)
+
+The special problem is also called the **Lifeline**. The scorer button is labelled **Lifeline**.
+
 
 - **5 minutes before the round ends**, every chamber is handed an envelope without warning. The description on the back is visible:
   - "SPECIAL PROBLEM"
@@ -249,10 +290,9 @@ The scoreboard shows these as quick buttons for each round. Anything else is ent
 | Andante | Defense lost or timed out: Easy / Medium / Hard | −10 / −20 / −30 |
 | Andante | Pool question correct: Easy / Medium / Hard | +5 / +15 / +20 |
 | Allegro | Correct: Easy / Medium / Hard | +15 / +30 / +60 |
-| Allegro | Incorrect: Easy / Medium / Hard | −15 / −30 / −60 |
 | Allegro | Each syntax error on a correct answer | −5 |
-| Allegro | Pianissimo / Hemiola / Ritardando bonus | +10 / +15 / +40 |
-| Allegro | Fortissimo wager, Crescendo bonus | Custom amount |
-| Allegro | Magnum Opus, first correct | +100 |
-| Allegro | Special problem: correct / not correct | +100 / −50 |
+| Allegro | Pianissimo / Ritardando bonus | +10 / +40 |
+| Allegro | Fortissimo stake: correct +stake (after +60) / wrong −stake | Custom amount |
+| Allegro | Magnum Opus: first correct / wrong or opened with nothing submitted (correct but late: 0) | +100 / −50 |
+| Allegro | Lifeline (special problem): correct / not correct | +100 / −50 |
 | Vivace | Tiebreak | No points. The admin sets the order of the tied chambers. |

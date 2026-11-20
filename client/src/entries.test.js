@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { effectiveEntries, liveEntries, totalsOf, recentFor, countFor } from './entries.js';
-import { enqueue, dequeue, loadOutbox, saveOutbox, isFinalAnswer } from './outbox.js';
+import { enqueue, dequeue, loadOutbox, saveOutbox, isFinalAnswer, newId } from './outbox.js';
 
 const e = (id, chamber, points, extra = {}) => ({ id, chamber, points, round: 'allegro', label: 'Correct', voids: null, ...extra });
 const add = (id, chamber, points, label = 'Correct') => ({ kind: 'add', msg: { id, chamber, points, round: 'allegro', label } });
@@ -64,5 +64,14 @@ describe('outbox', () => {
   it('treats added, duplicate and rejected as final, not a missing answer', () => {
     expect(['added', 'duplicate', 'rejected'].every((status) => isFinalAnswer({ status }))).toBe(true);
     expect(isFinalAnswer(undefined)).toBe(false);
+  });
+});
+
+describe('entry ids', () => {
+  it('works on plain http, where browsers hide crypto.randomUUID', () => {
+    const plainHttp = { getRandomValues: (a) => globalThis.crypto.getRandomValues(a) };
+    const ids = new Set(Array.from({ length: 1000 }, () => newId(plainHttp)));
+    expect(ids.size).toBe(1000);
+    for (const id of ids) expect(id).toMatch(/^[0-9a-f]{32}$/);
   });
 });

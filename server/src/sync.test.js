@@ -10,8 +10,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const cleanup = [];
 afterEach(async () => { while (cleanup.length) await cleanup.pop()(); });
 
-async function start(dbPath) {
-  const sb = createScoreboard({ root, dbPath, adminPin: '4321' });
+async function start(dbPath, chambersFile) {
+  const sb = createScoreboard({ root, dbPath, adminPin: '4321', chambersFile });
   const port = await sb.listen(0, '127.0.0.1');
   cleanup.push(() => sb.close());
   return { sb, url: `http://127.0.0.1:${port}` };
@@ -173,6 +173,32 @@ describe('socket sync', () => {
     const c = await client(second.url);
     expect(c.snap.state.musicVolume).toBe(0.4);
     expect(c.snap.state.musicMuted).toBe(true);
+  });
+
+  it('admin renames a chamber: every screen gets it, the CSV keeps it, scores stay put, bad names are refused', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-'));
+    cleanup.push(async () => fs.rmSync(dir, { recursive: true, force: true }));
+    const csv = path.join(dir, 'chambers.csv');
+    fs.copyFileSync(path.join(root, 'data/chambers.csv'), csv); // never touch the real file
+    const { url } = await start(path.join(dir, 's.sqlite'), csv);
+    const a = await client(url), b = await client(url);
+    await ack(a.s, 'entry:add', { id: 'r1', chamber: 'c03', points: 30, round: 'adagio', device: 'A' });
+
+    expect((await ack(b.s, 'chamber:rename', { id: 'c03', name: 'Sneaky' })).ok).toBe(false); // not an admin
+    expect((await login(a.s)).ok).toBe(true);
+    const pushed = new Promise((r) => b.s.once('chambers', r));
+    expect((await ack(a.s, 'chamber:rename', { id: 'c03', name: '  Bach, Inc.  ' })).ok).toBe(true);
+    expect((await pushed).find((c) => c.id === 'c03').name).toBe('Bach, Inc.');
+    for (const name of ['', '   ', 'a"b', 'two\nlines', 'x'.repeat(61)]) expect((await ack(a.s, 'chamber:rename', { id: 'c03', name })).ok).toBe(false);
+    expect((await ack(a.s, 'chamber:rename', { id: 'c99', name: 'Ghost' })).ok).toBe(false);
+
+    const again = await client(url); // a fresh screen, and the file on disk
+    expect(again.snap.chambers.find((c) => c.id === 'c03').name).toBe('Bach, Inc.');
+    expect(again.snap.totals.c03).toBe(30);
+    const { loadChambers } = await import('./chambers.js');
+    const saved = loadChambers(csv);
+    expect(saved).toHaveLength(15);
+    expect(saved.find((c) => c.id === 'c03')).toMatchObject({ name: 'Bach, Inc.', logo: 'client/assets/chambers/c03/logo.png' });
   });
 
   it('chambers carry logo and song URLs, or null while the files are missing', async () => {

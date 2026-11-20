@@ -14,7 +14,11 @@ export function saveOutbox(storage, outbox) {
   try { storage.setItem(KEY, JSON.stringify(outbox)); } catch { /* storage blocked: keep going in memory */ }
 }
 
-export const enqueue = (outbox, item) => (outbox.some((o) => o.msg.id === item.msg.id) ? outbox : [...outbox, item]);
+// Browsers only offer crypto.randomUUID on https or localhost; scorers open the host over plain http on the LAN.
+export const newId = (c = globalThis.crypto) =>
+  c.randomUUID?.() ?? Array.from(c.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
+
+export const enqueue =(outbox, item) => (outbox.some((o) => o.msg.id === item.msg.id) ? outbox : [...outbox, item]);
 export const dequeue = (outbox, id) => outbox.filter((o) => o.msg.id !== id);
 
 // A host answer of added, duplicate or rejected all mean "done with this item".

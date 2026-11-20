@@ -36,11 +36,10 @@ The chamber stays selected, so for the next entry to the same chamber you only t
 |  | Defense lost | −10, −20, −30 |
 |  | Pool | +5, +15, +20 |
 | Allegro | Correct | +15, +30, +60 |
-|  | Incorrect | −15, −30, −60 |
 |  | Syntax error | −5 (the heading shows how many times this chamber got it this round, for example **× 2**) |
-|  | Power-up bonus | +10, +15, +40 |
-|  | Magnum Opus | +100 |
-|  | Special problem | +100, −50 |
+|  | Power-up bonus | +10 (Pianissimo), +40 (Ritardando) |
+|  | Magnum Opus | +100, −50 |
+|  | Lifeline (the special problem envelope) | +100, −50 |
 | Vivace | No scoring this round | The panel says **No scoring this round**. The proctors run the tiebreak in person. |
 | Awarding | No scoring this round | Same. |
 
@@ -48,7 +47,7 @@ Easy, Medium and Hard are always the first, second and third button.
 
 ## 4. Any other amount: the Custom pad
 
-Use it for a Fortissimo wager, a Crescendo bonus, or any correction that has no button.
+Use it for a Fortissimo stake (correct: tap +60, then Custom +stake; wrong: Custom −stake only), or any correction that has no button. Syntax errors: tap −5 at most 3 times on an Easy, 6 on a Medium and 12 on a Hard, because a question never goes below 0.
 
 1. Tap the chamber card.
 2. Under **Custom**, tap **+** to add or **−** to subtract. The chosen sign is filled in.

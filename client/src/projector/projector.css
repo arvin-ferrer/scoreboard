@@ -1,8 +1,8 @@
 /* Sized in vh/vw so it scales to any screen and reads from across a room. */
 .projector { position: relative; height: 100vh; overflow: hidden; padding: 2vh 3vw; color: #fff;
-  background: linear-gradient(#0c0805d9, #0c0805d9), url('../../assets/ui/optimized/wall_pattern.png') center / 55vh; }
+  background: #090e3e url('../../assets/ui/registration/damask-bg.webp') 0 0 / 46vh 46vh repeat; } /* the registration form's damask */
 /* Curtains hang at both edges, behind the frame. */
-.projector::before, .projector::after { content: ''; position: absolute; top: 0; width: 16vw; height: 100vh; z-index: 0; pointer-events: none;
+.projector::before, .projector::after { content: ''; position: absolute; top: -3vh; width: 16vw; height: 103vh; /* the art has ~3% empty space above the rod */ z-index: 0; pointer-events: none;
   background: url('../../assets/ui/optimized/blue_curtain_1.png') top left / auto 100% no-repeat; }
 .projector::after { right: 0; transform: scaleX(-1); }
 .projector::before { left: 0; }
@@ -10,8 +10,9 @@
 
 .proj-head { height: 20vh; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2vw; padding: 0 1vw; }
 .proj-logo { max-height: 16vh; max-width: 100%; justify-self: start; }
-.proj-round { font-family: var(--display); font-size: 12vh; line-height: 1; text-align: center; text-shadow: 0 0.4vh 1.2vh #000; }
-.proj-timer { justify-self: end; font-size: 16vh; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 1.5vw; text-shadow: 0 0.4vh 1.2vh #000; }
+.proj-round { grid-column: 3; grid-row: 1; justify-self: end; font-family: var(--display); font-size: 12vh; line-height: 1; text-align: right; color: #f4ebd6; text-shadow: 0 0.4vh 0.4vh #00000080; }
+.proj-timer { grid-column: 2; grid-row: 1; justify-self: center; font-size: 16vh; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 1.5vw; color: #f4ebd6; text-shadow: 0 0.4vh 0.4vh #00000080; }
+.proj-timer.running { color: #f7e24a; }
 .proj-timer small { font-size: 4vh; font-weight: 400; opacity: 0.85; }
 .proj-timer.stopped, .proj-timer.paused { opacity: 0.7; }
 .proj-timer.urgent { color: #ff6a5c; opacity: 1; }
@@ -19,18 +20,24 @@
 @keyframes proj-blink { to { visibility: hidden; } }
 
 /* The gold frame holds the leaderboard. The frame art is 109 px thick at 2000 px wide. */
-.proj-frame { height: 76vh; padding: 1.2vh 1.6vw; background-color: #100b07f0; background-clip: padding-box;
+.proj-frame { height: 76vh; padding: 1.2vh 1.6vw; background-color: #090e3ef2; background-clip: padding-box;
   border: solid transparent; border-width: 3.6vh 3.6vh; border-image: url('../../assets/ui/optimized/square_frame.png') 109 / 3.6vh stretch; }
 .proj-board { --gap: 1.4vw; --units: var(--rows); --row-h: min(calc(66vh / var(--units)), 11vh); position: relative; height: calc(var(--units) * var(--row-h)); margin: 0; padding: 0; list-style: none; }
-.proj-row { position: absolute; left: 0; top: 0; width: calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols)); height: calc(var(--h, 1) * var(--row-h) - 0.8vh);
-  display: flex; align-items: center; gap: 1.2vw; padding: 0 1.4vw 0 0.6vw; background: #000c; border-left: 1.2vh solid var(--chamber); border-radius: 1vh;
+.proj-row { container-type: inline-size; position: absolute; left: 0; top: 0; width: calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols)); height: calc(var(--h, 1) * var(--row-h) - 0.8vh);
+  display: flex; align-items: center; gap: 1.2vw; padding: 0 1.4vw 0 0.6vw; background: #1a2959cc; border-left: 1.2vh solid var(--chamber); border-radius: 1.2vh; box-shadow: 0 0.4vh 0.4vh #00000080;
   transform: translate(calc(var(--col) * (100% + var(--gap))), calc(var(--y, 0) * var(--row-h)));
   transition: transform 900ms cubic-bezier(0.3, 0.9, 0.3, 1); }
-.proj-rank { width: 3.4vw; font-size: calc(var(--row-h) * 0.5); font-weight: 700; color: #e0bb62; text-align: center; }
+.proj-rank { width: 3.4vw; font-size: calc(var(--row-h) * 0.5); font-weight: 700; color: #f7e24a; text-align: center; }
 .proj-row .logo { width: calc(var(--row-h) * 0.7); height: calc(var(--row-h) * 0.7); border-width: 0.3vh; }
 .proj-row .logo.fallback { font-size: calc(var(--row-h) * 0.4); }
-.proj-name { flex: 1; min-width: 0; font-size: calc(var(--row-h) * 0.44); font-weight: 600; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.proj-name small { margin-left: 1vw; font-size: calc(var(--row-h) * 0.26); font-weight: 400; color: #d3c3a3; }
+/* Name, then the optional "Defending against" line. Long text wraps to a second line rather than being cut. */
+.proj-name { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; font-size: calc(var(--row-h) * 0.44); font-weight: 600; line-height: 1.08; color: #f4ebd6; }
+.proj-title { font-size: min(1em, 6.5cqi); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: break-word; }
+.proj-name.long { font-size: calc(var(--row-h) * 0.36); }
+.proj-name.defending { font-size: calc(var(--row-h) * 0.34); }
+.proj-name.defending .proj-title { -webkit-line-clamp: 1; line-clamp: 1; }
+.proj-name small { margin-left: 1vw; font-size: calc(var(--row-h) * 0.26); font-weight: 400; color: #a29b6e; }
+.proj-defend { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; margin-top: 0.15em; font-size: calc(var(--row-h) * 0.23); font-weight: 700; line-height: 1.05; color: #ff9a8a; }
 .proj-total { font-size: calc(var(--row-h) * 0.58); font-weight: 700; font-variant-numeric: tabular-nums; }
 .proj-total.masked { opacity: 0.6; }
 
@@ -39,17 +46,46 @@
 .proj-row.medal-2 { --medal: #dfe5ec; --medal-2: #8e99a6; }
 .proj-row.medal-3 { --medal: #e0975a; --medal-2: #8a5226; }
 .proj-row.medal { border: 0.35vh solid var(--medal); border-left: 1.2vh solid var(--chamber);
-  background: linear-gradient(90deg, #000c 55%, color-mix(in srgb, var(--medal) 22%, #000c)); box-shadow: 0 0 1.6vh color-mix(in srgb, var(--medal) 45%, transparent); }
+  background: linear-gradient(90deg, #1a2959e6 55%, color-mix(in srgb, var(--medal) 24%, #1a2959e6)); box-shadow: 0 0 1.6vh color-mix(in srgb, var(--medal) 45%, transparent); }
 .proj-row.medal .proj-rank { display: grid; place-items: center; flex: none; width: calc(var(--row-h) * var(--h) * 0.62); height: calc(var(--row-h) * var(--h) * 0.62);
-  border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--medal), var(--medal-2)); color: #14100c; font-size: calc(var(--row-h) * var(--h) * 0.38); text-shadow: none; }
+  border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--medal), var(--medal-2)); color: #090e3e; font-size: calc(var(--row-h) * var(--h) * 0.38); text-shadow: none; }
 .proj-row.medal .logo { width: calc(var(--row-h) * var(--h) * 0.72); height: calc(var(--row-h) * var(--h) * 0.72); }
 .proj-row.medal .proj-name { font-size: calc(var(--row-h) * var(--h) * 0.4); }
+.proj-row.medal .proj-name.long, .proj-row.medal .proj-name.defending { font-size: calc(var(--row-h) * var(--h) * 0.3); }
+.proj-row.medal .proj-defend { font-size: calc(var(--row-h) * var(--h) * 0.18); }
 .proj-row.medal .proj-total { font-size: calc(var(--row-h) * var(--h) * 0.54); color: var(--medal); }
 /* A thin gold line between 3rd and 4th place. */
 .proj-divider { position: absolute; left: 0; top: 0; width: calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols)); height: 0.3vh; border-radius: 1vh;
-  background: linear-gradient(90deg, transparent, #e0bb62, transparent); transform: translateY(calc(var(--y) * var(--row-h))); transition: transform 900ms cubic-bezier(0.3, 0.9, 0.3, 1); }
+  background: linear-gradient(90deg, transparent, #f7e24a, transparent); transform: translateY(calc(var(--y) * var(--row-h))); transition: transform 900ms cubic-bezier(0.3, 0.9, 0.3, 1); }
 
 /* Small, in the corner, and gone once clicked. */
 .enable-sound { position: absolute; z-index: 5; right: 1.5vw; bottom: 1vh; min-height: 48px; padding: 0 1.2rem; font-size: 1.2rem; font-weight: 700;
-  border-radius: 8px; border: 3px solid #e0bb62; background: #14100c; color: #f6edda; }
+  border-radius: 999px; border: 0; background: #f7e24a; color: #18181b; box-shadow: 0 4px 4px #00000080; }
 @media (prefers-reduced-motion: reduce) { .proj-row { transition: none; } }
+
+/* Portrait screens (a phone, an upright tablet): the header stacks, the curtains step back and the board is one
+   scrolling column of fixed-height rows, so every name stays readable. */
+@media (max-aspect-ratio: 4/5) {
+  .projector { height: auto; min-height: 100dvh; overflow: visible; padding: 2vh 4vw 4vh; }
+  .projector::before, .projector::after { width: 10vw; opacity: 0.6; }
+  .proj-head { height: auto; grid-template-columns: 1fr auto; row-gap: 0.5vh; padding: 0 2vw 2vh; }
+  .proj-logo { max-height: 8vh; }
+  .proj-round { grid-column: 2; font-size: min(7vh, 12vw); }
+  .proj-timer { grid-column: 1 / -1; grid-row: 2; font-size: min(11vh, 24vw); }
+  .proj-frame { height: auto; padding: 1.5vh 3vw; border-width: 2.4vh; border-image-width: 2.4vh; }
+  .proj-board { --row-h: clamp(56px, 7.5vh, 80px); --gap: 0px; }
+  .proj-row { gap: 2.5vw; padding: 0 3vw 0 1.5vw; }
+  .proj-rank { width: 1.4em; font-size: calc(var(--row-h) * 0.42); }
+  .proj-row .logo { width: calc(var(--row-h) * 0.6); height: calc(var(--row-h) * 0.6); }
+  .proj-name { font-size: calc(var(--row-h) * 0.3); }
+  .proj-name.long, .proj-name.defending { font-size: calc(var(--row-h) * 0.26); }
+  .proj-defend { font-size: calc(var(--row-h) * 0.2); }
+  .proj-total { font-size: calc(var(--row-h) * 0.46); }
+  .proj-row.medal .proj-rank { width: calc(var(--row-h) * var(--h) * 0.5); height: calc(var(--row-h) * var(--h) * 0.5); font-size: calc(var(--row-h) * var(--h) * 0.3); }
+  .proj-row.medal .logo { width: calc(var(--row-h) * var(--h) * 0.55); height: calc(var(--row-h) * var(--h) * 0.55); }
+  .proj-row.medal .proj-name { font-size: calc(var(--row-h) * var(--h) * 0.26); }
+  .proj-row.medal .proj-name.long, .proj-row.medal .proj-name.defending { font-size: calc(var(--row-h) * var(--h) * 0.21); }
+  .proj-row.medal .proj-defend { font-size: calc(var(--row-h) * var(--h) * 0.15); }
+  .proj-row.medal .proj-total { font-size: calc(var(--row-h) * var(--h) * 0.42); }
+  .enable-sound { position: fixed; }
+}

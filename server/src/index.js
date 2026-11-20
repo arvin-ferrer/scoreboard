@@ -35,22 +35,19 @@ if (args.fromBackup) {
 
 const settingsFile = path.join(root, 'shared/settings.json');
 const settings = fs.existsSync(settingsFile) ? JSON.parse(fs.readFileSync(settingsFile, 'utf8')) : {};
-const backupDir = args.backupDir || process.env.BACKUP_DIR || settings.backupDir || '';
+// With no USB folder set, still keep minute copies on this laptop so a damaged score log can be restored.
+const backupDir = args.backupDir || process.env.BACKUP_DIR || settings.backupDir || 'data/backups';
 
 const sb = createScoreboard({ root, dbPath });
 const p = await sb.listen(port);
 console.log(`Scoreboard server on port ${p}. ${sb.log.count()} entries replayed from ${dbPath}`);
 
-let backup = null;
-if (backupDir) {
-  backup = createBackup({
-    log: sb.log, chambers: sb.chamberList(), dir: path.resolve(root, backupDir), keep: Number(settings.backupKeep) || 10,
-  });
-  backup.start();
-  console.log(`Backing up every minute to ${path.resolve(root, backupDir)}`);
-} else {
-  console.log('WARNING: no backup folder set. Set backupDir in shared/settings.json or pass --backup-dir.');
-}
+const backup = createBackup({
+  log: sb.log, chambers: sb.chamberList, dir: path.resolve(root, backupDir), keep: Number(settings.backupKeep) || 10,
+});
+backup.start();
+console.log(`Backing up every minute to ${path.resolve(root, backupDir)}`);
+if (backupDir === 'data/backups') console.log('WARNING: backups are on this laptop only. Set backupDir to a USB drive so they survive if the laptop dies.');
 
 const missing = sb.chamberList().flatMap((c) => [c.logoUrl ? null : `${c.id} logo`, c.songUrl ? null : `${c.id} song`]).filter(Boolean);
 if (missing.length) console.log(`Missing chamber files (fallbacks will be used): ${missing.join(', ')}`);
@@ -61,8 +58,8 @@ const shutdown = async () => {
   if (closing) return;
   closing = true;
   setTimeout(() => process.exit(0), 3000).unref();
-  backup?.stop();
-  await backup?.run();
+  backup.stop();
+  await backup.run();
   await sb.close();
   process.exit(0);
 };

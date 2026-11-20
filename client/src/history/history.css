@@ -1,11 +1,21 @@
 .page { min-height: 100%; display: flex; flex-direction: column; }
 .page-body { padding: 1rem; }
-.history-filter { display: inline-block; margin-bottom: 0.6rem; font-size: 1.1rem; }
-.history-filter select { font: inherit; min-height: 44px; padding: 0 0.6rem; background: var(--panel); color: var(--cream); border: 2px solid var(--line); border-radius: 6px; }
-.history-scroll { overflow: auto; max-height: calc(100vh - 11rem); background: var(--panel); border: 2px solid var(--line); border-radius: 8px; }
-.history table { width: 100%; border-collapse: collapse; font-size: 1rem; }
-.history th { text-align: left; position: sticky; top: 0; background: var(--panel-2); border-bottom: 2px solid var(--gold); padding: 0.4rem 0.6rem; }
-.history td { padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.history-filter { display: flex; align-items: center; gap: 0.5rem; max-width: 100%; margin-bottom: 0.6rem; font-size: 1.1rem; }
+/* A select is as wide as its longest option; a long chamber name must not push it past a phone's edge. */
+.history-filter select { flex: 0 1 auto; min-width: 0; max-width: 24rem; text-overflow: ellipsis; font: inherit; min-height: 44px; padding: 0 0.75rem; background: #050829; color: var(--cream); border: 2px solid var(--line); border-radius: 12px; }
+.history-filter select:focus-visible { outline: none; border-color: var(--cream); }
+.history-scroll { overflow: auto; max-height: calc(100dvh - 11rem); background: var(--panel); border: 2px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+.history table { width: 100%; border-collapse: collapse; font-size: 1rem; font-variant-numeric: tabular-nums; }
+.history th { text-align: left; position: sticky; top: 0; background: var(--panel-2); border-bottom: 2px solid var(--gold); padding: 0.55rem 0.7rem; font-weight: 600; }
+.history td { padding: 0.5rem 0.7rem; border-bottom: 1px solid #1a2959; white-space: nowrap; }
+.history tbody tr:hover td { background: #ffffff08; }
 .history tr.voided td { opacity: 0.55; text-decoration: line-through; }
 .history tr.voided td:last-child { text-decoration: none; }
 .dot { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.5em; }
+@media (max-width: 759px) {
+  .page-body { padding: 0.75rem; }
+  /* Phones keep what a checker looks for: when, which chamber, how much, why. Round and device stay on laptops. */
+  .history th:nth-child(5), .history td:nth-child(5), .history th:nth-child(6), .history td:nth-child(6) { display: none; }
+  .history td:nth-child(4) { white-space: normal; min-width: 6rem; }
+  .history th, .history td { padding: 0.5rem 0.45rem; }
+}

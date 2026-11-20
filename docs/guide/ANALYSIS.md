@@ -157,7 +157,7 @@ Fix: show the code in the scorer top bar, or let the organisers write each lapto
 | PLAYBOOK: "Unzip the Balmoral font into client/assets/ui/fonts/" | Done; the zip is still there too | `client/assets/ui/fonts/` |
 | Old README: `start-scoreboard.bat --backup-dir E:\…` | Works only from a Command Prompt, not by double-click | `start-scoreboard.bat:11` |
 | CLAUDE.md: "Quick-button point values live in shared/scoring.json" | True. The load test and scorer both read them from there; no hard-coded values found | grep |
-| MECHANICS §10: "Fortissimo wager, Crescendo bonus: custom amount" | Custom pad, max 1000 by setting | `settings.json` |
+| MECHANICS §10: "Fortissimo stake: custom amount" | Custom pad, max 1000 by setting | `settings.json` |
 
 ## Open questions and `TODO: verify` items
 
